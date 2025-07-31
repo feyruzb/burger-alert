@@ -1,0 +1,18 @@
+{% extends 'base.html'%}
+
+{%block head %}
+<title>Failed page</title>
+{% endblock %}
+
+{%block body %}
+
+<div class ="content">
+    <h2>Today's Orders</h2>
+    <ul>
+        {% for order in orders %}
+            <li>{{ order.name }}, Ordered: <span class="pico-color-red-450">{{ order.order }}</span> | Transporation mode: <span class="pico-color-red-450">{{ order.mode }}</span></li>
+        {% endfor %}
+    </ul>
+</div>
+
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html'%}
+
+{%block head %}
+<title>Ordering page</title>
+{% endblock %}
+
+{%block body %}
+
+<div class ="content">
+    <h2>Place Your Order</h2>
+    <form action="/submit" method="POST">
+        <label for="name">Your Name:</label>
+        <input type="text" id="name" name="name" required>
+
+        <br><br>
+
+        <label for="order">Order Description(200 char max):</label>
+        <input type="text" id="order" name="order" required>
+
+        <br><br>
+
+        <fieldset>
+            <legend>Transportation:</legend>
+
+            <label>
+                <input name="mode" value="Has a car and will drive people from office" type="radio" role="switch" required />
+                I come to the office with car and I will drive.
+            </label>
+
+            <label>
+                <input name="mode" value="Want to be driven by someone from office" type="radio" role="switch" required />
+                I come to the office without car and want to be driven.
+            </label>
+
+            <label>
+                <input name="mode" value="Will self drive " type="radio" role="switch" required />
+                I will come by myself.
+            </label>
+        </fieldset>
+
+        <button type="submit">Submit Order</button>
+    </form>
+</div>
+
+{% endblock %}
+
