@@ -1,0 +1,26 @@
+{% extends 'base.html'%}
+
+{%block head %}
+<title>Distributing people in cars page</title>
+{% endblock %}
+
+{%block body %}
+
+<div class="content">
+    <h2>Car Distribution</h2>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        {% for car, passengers in list_of_distributes %}
+            <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
+                <h3>Car: <span class="pico-color-red-450">{{ car }}</span></h3>
+                <ul>
+                    {% for person in passengers %}
+                        <li><span class="pico-color-red-450">{{ person }}</span></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+
+{% endblock %}
