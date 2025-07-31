@@ -1,18 +1,18 @@
 {% extends 'base.html'%}
 
 {%block head %}
-<title>Failed page</title>
+<title>Orders page</title>
 {% endblock %}
 
 {%block body %}
 
 <div class ="content">
     <h2>Today's Orders</h2>
-    <ul>
+    <ol>
         {% for order in orders %}
-            <li>{{ order.name }}, Ordered: <span class="pico-color-red-450">{{ order.order }}</span> | Transporation mode: <span class="pico-color-red-450">{{ order.mode }}</span></li>
+            <li><span class="pico-color-red-450">{{ order.name }}</span>, Ordered: <span class="pico-color-red-450">{{ order.order }}</span> | Transporation mode: <span class="pico-color-red-450">{{ order.mode }}</span></li>
         {% endfor %}
-    </ul>
+    </ol>
 </div>
 
 {% endblock %}
