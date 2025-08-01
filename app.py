@@ -18,6 +18,7 @@ class Orders(db.Model):
 
     def __repr__(self):
         return '<Order %r>' % self.id
+
 def is_now_burger_time():
     return datetime.now().hour > 10 and \
         datetime.now().hour < 12 and \
@@ -103,7 +104,3 @@ def hello():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
