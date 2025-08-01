@@ -3,6 +3,8 @@ from flask import Flask , render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
 from typing import Dict, List
+from sqlalchemy import and_
+from collections import defaultdict
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
@@ -40,7 +42,7 @@ def submit():
 
     if not is_now_burger_time():
         return render_template("failed.html", error_msg = "not burger ordering time")
-    
+
     order = Orders(name=name, order=order, mode = mode)
 
     try:
@@ -52,15 +54,28 @@ def submit():
 
 @app.route("/today_orders")
 def return_todays_orders():
-    start_of_today = datetime.combine(date.today(), time.min)
-    end_of_today = datetime.combine(date.today(), time.max)
+    today = date.today()
+    start_of_today = datetime.combine(today, time.min)
+    end_of_today = datetime.combine(today, time.max)
 
     orders = Orders.query.filter(
-        Orders.date_created >= start_of_today,
-        Orders.date_created <= end_of_today
+        and_(
+            Orders.date_created >= start_of_today,
+            Orders.date_created <= end_of_today
+        )
     ).order_by(Orders.date_created).all()
 
-    return render_template("today_orders.html", orders=orders)
+    sorted_orders = defaultdict(list)
+    for order in orders:
+        sorted_orders[order.name].append(order.order)
+
+    sorted_orders_mega = {
+        name: ", ".join(item_list)
+        for name, item_list in sorted_orders.items()
+    }
+
+    return render_template("today_orders.html", orders=sorted_orders_mega)
+
 
 @app.route("/car_distribution")
 def return_car_distribution():
