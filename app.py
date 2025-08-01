@@ -1,9 +1,9 @@
+from datetime import datetime, date, time
 from flask import Flask , render_template, request
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date, time
-from typing import Dict, List
 from pathlib import Path
-from datetime import datetime
+from typing import Dict, List
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
 db = SQLAlchemy(app)
@@ -38,22 +38,17 @@ def submit():
     order = request.form.get("order")[:200]
     mode = request.form.get("mode")
 
-    if is_now_burger_time():
-        order = Orders(name=name,
-                    order=order,
-                    mode = mode
-                    )
-
-        try:
-            db.session.add(order)
-            db.session.commit()
-            return render_template("confirmation.html",
-                                name=name,
-                                order=order)
-        except:
-            return render_template("failed.html")
-    else:
+    if not is_now_burger_time():
         return render_template("failed.html", error_msg = "not burger ordering time")
+    
+    order = Orders(name=name, order=order, mode = mode)
+
+    try:
+        db.session.add(order)
+        db.session.commit()
+        return render_template("confirmation.html", name=name, order=order)
+    except:
+        return render_template("failed.html")
 
 @app.route("/today_orders")
 def return_todays_orders():
@@ -102,5 +97,4 @@ def return_car_distribution():
     return render_template("car_distribution.html", list_of_distributes=list_of_distributes)
 
 if __name__ == "__main__":
-
     app.run(debug=True)
