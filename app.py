@@ -2,8 +2,7 @@ from flask import Flask , render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, time
 from typing import Dict, List
-from apscheduler.schedulers.background import BackgroundScheduler
-
+from pathlib import Path
 from datetime import datetime
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
@@ -18,6 +17,10 @@ class Orders(db.Model):
 
     def __repr__(self):
         return '<Order %r>' % self.id
+
+if not Path('instance/orders.db').exists():
+    with app.app_context():
+        db.create_all()
 
 def is_now_burger_time():
     return app.debug or datetime.now().hour > 10 and \
@@ -98,9 +101,6 @@ def return_car_distribution():
 
     return render_template("car_distribution.html", list_of_distributes=list_of_distributes)
 
-@app.route('/hello')
-def hello():
-    return 'Hello, World'
-
 if __name__ == "__main__":
+
     app.run(debug=True)
