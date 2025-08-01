@@ -2,7 +2,7 @@ from flask import Flask , render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date, time
 from typing import Dict, List
-import random
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from datetime import datetime
 app = Flask(__name__)
@@ -19,14 +19,28 @@ class Orders(db.Model):
     def __repr__(self):
         return '<Order %r>' % self.id
 
+# semi regular checks to turn submit button only
+# during ordering time
+def scheduled_task():
+
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(func=scheduled_task, trigger="interval", hours=1)
+    scheduler.start()
+
 @app.route("/")
 def index_page():
-    return render_template('index.html')
+    current_time = datetime.now().hour
+    if current_time < 12 and current_time > 10:
+        disabled = False
+    else:
+        disabled = True
+    print(disabled)
+    return render_template('index.html', disabled=disabled)
 
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form.get("name")
-    order = request.form.get("order")
+    order = request.form.get("order")[:200]
     mode = request.form.get("mode")
 
     order = Orders(name=name,
@@ -72,10 +86,6 @@ def return_car_distribution():
         Orders.date_created <= end_of_today,
         Orders.mode =="Want to be driven by someone from office"
     ).order_by(Orders.name).all()]))
-    # print(people_with_cars)
-    # print(people_without_cars)
-
-    # random.shuffle(people_without_cars)
 
     list_of_distributes: Dict[str, List[str]] = {}
 
