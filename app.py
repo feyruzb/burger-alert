@@ -1,10 +1,9 @@
+from datetime import datetime, date, time
 from flask import Flask , render_template, request
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, date, time
+from pathlib import Path
 from typing import Dict, List
-import random
 
-from datetime import datetime
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
 db = SQLAlchemy(app)
@@ -19,27 +18,35 @@ class Orders(db.Model):
     def __repr__(self):
         return '<Order %r>' % self.id
 
+if not Path('instance/orders.db').exists():
+    with app.app_context():
+        db.create_all()
+
+def is_now_burger_time():
+    return app.debug or datetime.now().hour > 10 and \
+        datetime.now().hour < 12 and \
+        datetime.now().weekday() == 3
+
 @app.route("/")
 def index_page():
-    return render_template('index.html')
+    disabled = not is_now_burger_time()
+    return render_template('index.html', disabled=disabled)
 
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form.get("name")
-    order = request.form.get("order")
+    order = request.form.get("order")[:200]
     mode = request.form.get("mode")
 
-    order = Orders(name=name,
-                   order=order,
-                   mode = mode
-                   )
+    if not is_now_burger_time():
+        return render_template("failed.html", error_msg = "not burger ordering time")
+    
+    order = Orders(name=name, order=order, mode = mode)
 
     try:
         db.session.add(order)
         db.session.commit()
-        return render_template("confirmation.html",
-                            name=name,
-                            order=order)
+        return render_template("confirmation.html", name=name, order=order)
     except:
         return render_template("failed.html")
 
@@ -72,10 +79,6 @@ def return_car_distribution():
         Orders.date_created <= end_of_today,
         Orders.mode =="Want to be driven by someone from office"
     ).order_by(Orders.name).all()]))
-    # print(people_with_cars)
-    # print(people_without_cars)
-
-    # random.shuffle(people_without_cars)
 
     list_of_distributes: Dict[str, List[str]] = {}
 
@@ -93,13 +96,5 @@ def return_car_distribution():
 
     return render_template("car_distribution.html", list_of_distributes=list_of_distributes)
 
-@app.route('/hello')
-def hello():
-    return 'Hello, World'
-
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-

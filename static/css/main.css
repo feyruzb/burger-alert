@@ -1,6 +1,7 @@
 body {
     margin: 0;
     font-family: sans-serif;
+    word-break: break-all;
 }
 
 header {
