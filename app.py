@@ -18,23 +18,14 @@ class Orders(db.Model):
 
     def __repr__(self):
         return '<Order %r>' % self.id
-
-# semi regular checks to turn submit button only
-# during ordering time
-def scheduled_task():
-
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(func=scheduled_task, trigger="interval", hours=1)
-    scheduler.start()
+def is_now_burger_time():
+    return datetime.now().hour > 10 and \
+        datetime.now().hour < 12 and \
+        datetime.now().weekday() == 3
 
 @app.route("/")
 def index_page():
-    current_time = datetime.now().hour
-    if current_time < 12 and current_time > 10:
-        disabled = False
-    else:
-        disabled = True
-    print(disabled)
+    disabled = is_now_burger_time()
     return render_template('index.html', disabled=disabled)
 
 @app.route("/submit", methods=["POST"])
@@ -43,19 +34,22 @@ def submit():
     order = request.form.get("order")[:200]
     mode = request.form.get("mode")
 
-    order = Orders(name=name,
-                   order=order,
-                   mode = mode
-                   )
+    if is_now_burger_time():
+        order = Orders(name=name,
+                    order=order,
+                    mode = mode
+                    )
 
-    try:
-        db.session.add(order)
-        db.session.commit()
-        return render_template("confirmation.html",
-                            name=name,
-                            order=order)
-    except:
-        return render_template("failed.html")
+        try:
+            db.session.add(order)
+            db.session.commit()
+            return render_template("confirmation.html",
+                                name=name,
+                                order=order)
+        except:
+            return render_template("failed.html")
+    else:
+        return render_template("failed.html", error_msg = "not burger ordering time")
 
 @app.route("/today_orders")
 def return_todays_orders():
