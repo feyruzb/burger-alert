@@ -20,13 +20,13 @@ class Orders(db.Model):
         return '<Order %r>' % self.id
 
 def is_now_burger_time():
-    return datetime.now().hour > 10 and \
+    return app.debug or datetime.now().hour > 10 and \
         datetime.now().hour < 12 and \
         datetime.now().weekday() == 3
 
 @app.route("/")
 def index_page():
-    disabled = is_now_burger_time()
+    disabled = not is_now_burger_time()
     return render_template('index.html', disabled=disabled)
 
 @app.route("/submit", methods=["POST"])
