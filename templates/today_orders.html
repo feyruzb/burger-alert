@@ -8,9 +8,12 @@
 
 <div class ="content">
     <h2>Today's Orders</h2>
-    <ol>
-        {% for order in orders %}
-            <li><span class="pico-color-red-450">{{ order.name }}</span>, Ordered: <span class="pico-color-red-450">{{ order.order }}</span> | Transporation mode: <span class="pico-color-red-450">{{ order.mode }}</span></li>
+        <ol>
+        {% for key, value in orders.items() %}
+            <li>
+                <span class="pico-color-red-450">{{ key }}</span>
+                ordered: <span class="pico-color-red-450">{{ value }}</span>
+            </li>
         {% endfor %}
     </ol>
 </div>
