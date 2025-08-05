@@ -10,15 +10,19 @@ from sqlalchemy import distinct
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
 db = SQLAlchemy(app)
+# ordering modes table
+# Has a car and will drive people from office. = 1
+# Want to be driven by someone from office. = 2
+# I will come by myself. = 3
 
 # GLOBAL VARIABLES
-MAX_PASSANGER_CNT = 4
+MAX_PASSENGER_CNT = 4
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     order = db.Column(db.String(200), nullable=False)
-    mode = db.Column(db.String(200), nullable=False)
+    mode = db.Column(db.Integer, nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
@@ -90,13 +94,13 @@ def return_car_distribution():
     people_with_cars = list(set([ order.name for order in Orders.query.filter(
         Orders.date_created >= start_of_today,
         Orders.date_created <= end_of_today,
-        Orders.mode =="Has a car and will drive people from office"
+        Orders.mode == 1
     ).order_by(Orders.date_created).all() ]))
 
     names = db.session.query(Orders.name).filter(
         Orders.date_created >= start_of_today,
         Orders.date_created <= end_of_today,
-        Orders.mode == "Want to be driven by someone from office"
+        Orders.mode == 2
     ).distinct().order_by(Orders.date_created).all()
 
     people_without_cars = [name[0] for name in names]
@@ -110,7 +114,7 @@ def return_car_distribution():
     driver_cnt = 0
 
     for ind, walker in enumerate(people_without_cars):
-        if ind+1 > (len(people_with_cars) * MAX_PASSANGER_CNT):
+        if ind+1 > (len(people_with_cars) * MAX_PASSENGER_CNT):
             list_of_extra.append(walker)
         else:
             list_of_distributes[people_with_cars[driver_cnt]].append(walker)
@@ -118,7 +122,9 @@ def return_car_distribution():
 
     list_of_distributes = list(list_of_distributes.items())
 
-    return render_template("car_distribution.html", list_of_distributes=list_of_distributes, list_of_extra=list_of_extra)
+    return render_template("car_distribution.html",
+                           list_of_distributes=list_of_distributes,
+                           list_of_extra=list_of_extra)
 
 if __name__ == "__main__":
     app.run(debug=True)
