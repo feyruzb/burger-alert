@@ -11,6 +11,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
 db = SQLAlchemy(app)
 
+# GLOBAL VARIABLES
+MAX_PASSANGER_CNT = 4
+
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
@@ -107,7 +110,7 @@ def return_car_distribution():
     driver_cnt = 0
 
     for ind, walker in enumerate(people_without_cars):
-        if ind+1 > (len(people_with_cars)*4):
+        if ind+1 > (len(people_with_cars) * MAX_PASSANGER_CNT):
             list_of_extra.append(walker)
         else:
             list_of_distributes[people_with_cars[driver_cnt]].append(walker)
