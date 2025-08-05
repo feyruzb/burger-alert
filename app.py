@@ -5,10 +5,14 @@ from pathlib import Path
 from typing import Dict, List
 from sqlalchemy import and_
 from collections import defaultdict
+from sqlalchemy import distinct
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
 db = SQLAlchemy(app)
+
+# GLOBAL VARIABLES
+MAX_PASSANGER_CNT = 4
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -82,34 +86,39 @@ def return_car_distribution():
     start_of_today = datetime.combine(date.today(), time.min)
     end_of_today = datetime.combine(date.today(), time.max)
 
-
+    # get list of people with car
     people_with_cars = list(set([ order.name for order in Orders.query.filter(
         Orders.date_created >= start_of_today,
         Orders.date_created <= end_of_today,
         Orders.mode =="Has a car and will drive people from office"
-    ).order_by(Orders.name).all() ]))
+    ).order_by(Orders.date_created).all() ]))
 
-    people_without_cars = list(set([ order.name for order in Orders.query.filter(
+    names = db.session.query(Orders.name).filter(
         Orders.date_created >= start_of_today,
         Orders.date_created <= end_of_today,
-        Orders.mode =="Want to be driven by someone from office"
-    ).order_by(Orders.name).all()]))
+        Orders.mode == "Want to be driven by someone from office"
+    ).distinct().order_by(Orders.date_created).all()
+
+    people_without_cars = [name[0] for name in names]
 
     list_of_distributes: Dict[str, List[str]] = {}
-
+    list_of_extra = []
+    # Fill dict of drivers with passengers
     for driver in people_with_cars:
         list_of_distributes[driver] = list()
 
     driver_cnt = 0
-    for walker in people_without_cars:
-        list_of_distributes[people_with_cars[driver_cnt]].append(walker)
-        driver_cnt = (driver_cnt + 1) % len(people_with_cars)
 
-    print("list of distributors", list_of_distributes.items())
+    for ind, walker in enumerate(people_without_cars):
+        if ind+1 > (len(people_with_cars) * MAX_PASSANGER_CNT):
+            list_of_extra.append(walker)
+        else:
+            list_of_distributes[people_with_cars[driver_cnt]].append(walker)
+            driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+
     list_of_distributes = list(list_of_distributes.items())
 
-
-    return render_template("car_distribution.html", list_of_distributes=list_of_distributes)
+    return render_template("car_distribution.html", list_of_distributes=list_of_distributes, list_of_extra=list_of_extra)
 
 if __name__ == "__main__":
     app.run(debug=True)
