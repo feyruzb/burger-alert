@@ -17,6 +17,8 @@ db = SQLAlchemy(app)
 
 # GLOBAL VARIABLES
 MAX_PASSENGER_CNT = 4
+START_HOUR_OF_DAY = 1
+END_HOUR_OF_DAY = 13
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -33,8 +35,8 @@ if not Path('instance/orders.db').exists():
         db.create_all()
 
 def is_now_burger_time():
-    return app.debug or datetime.now().hour > 10 and \
-        datetime.now().hour < 12 and \
+    return app.debug or datetime.now().hour > START_HOUR_OF_DAY and \
+        datetime.now().hour < END_HOUR_OF_DAY and \
         datetime.now().weekday() == 3
 
 @app.route("/")
