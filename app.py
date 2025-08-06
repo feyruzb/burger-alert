@@ -1,4 +1,5 @@
 from datetime import datetime, date, time
+from os import getenv
 from flask import Flask , render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
@@ -19,6 +20,7 @@ db = SQLAlchemy(app)
 MAX_PASSENGER_CNT = 4
 START_HOUR_OF_DAY = 1
 END_HOUR_OF_DAY = 13
+NO_TIME_CONSTRAINT = getenv("NO_TIME_CONSTRAINT") in ["true", "1"]
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,7 +37,9 @@ if not Path('instance/orders.db').exists():
         db.create_all()
 
 def is_now_burger_time():
-    return app.debug or datetime.now().hour > START_HOUR_OF_DAY and \
+    if app.debug or NO_TIME_CONSTRAINT:
+        return True
+    return datetime.now().hour > START_HOUR_OF_DAY and \
         datetime.now().hour < END_HOUR_OF_DAY and \
         datetime.now().weekday() == 3
 
