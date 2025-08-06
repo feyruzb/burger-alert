@@ -1,0 +1,10 @@
+services:
+  burger_alert:
+    build: .
+    container_name: burger_alert
+    ports:
+      - 80:80
+    volumes:
+      - ./instance:/app/instance
+    restart: unless-stopped
+
