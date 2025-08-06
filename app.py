@@ -127,4 +127,6 @@ def return_car_distribution():
                            list_of_extra=list_of_extra)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0",
+            port="80",
+            debug=True)
