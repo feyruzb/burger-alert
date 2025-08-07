@@ -21,29 +21,111 @@
         <input type="text" id="order" name="order" required>
 
         <br><br>
-
+        <!-- takeout or dine in -->
         <fieldset>
-            <legend>Transportation:</legend>
-
+            <legend>Takeout:</legend>
             <label>
-                <input name="mode" value="1" type="radio" role="switch" required />
-                I come to the office with car and I will drive.
+                <input name="takeout" value="1" type="radio" role="switch" onchange="toggleTransportation(this)" required />
+                I want a takeout brought to the office.
             </label>
 
             <label>
-                <input name="mode" value="2" type="radio" role="switch" required />
-                I come to the office without car and want to be driven.
-            </label>
-
-            <label>
-                <input name="mode" value="3" type="radio" role="switch" required />
-                I will come by myself.
+                <input name="takeout" value="0" type="radio" role="switch" onchange="toggleTransportation(this)" required />
+                I want to eat at Big Daddy
             </label>
         </fieldset>
+
+        <!-- LIPÓTI BAKERY -->
+        <fieldset>
+
+        </fieldset>
+        <!-- Transportation -->
+
+        <div class="transportFieldsetElement field-hidden">
+            <fieldset>
+                <legend>Transportation:</legend>
+
+                <label>
+                    <input name="mode" value="1" type="radio" role="switch" />
+                    I come to the office with car and I will drive.
+                </label>
+
+                <label>
+                    <input name="mode" value="2" type="radio" role="switch" onchange="lipotiToggler(this)"/>
+                    I come to the office without car and want to be driven.
+                </label>
+
+                <label>
+                    <input name="mode" value="3" type="radio" role="switch"/>
+                    I will come by myself.
+                </label>
+                <!-- LIPÓTI BAKERY -->
+                <div class="lipotisetElement field-hidden">
+                <legend>LIPÓTI BAKERY:</legend>
+                    <label>
+                        <input name="lipoti" value="1" type="radio" role="switch" required />
+                        Yes, I want to go to LIPÓTI BAKERY.
+                    </label>
+                    <label>
+                        <input name="lipoti" value="0" type="radio" role="switch" required />
+                        NO, I do not want to go to LIPÓTI BAKERY.
+                    </label>
+                </div>
+            </fieldset>
+        </div>
 
         <button type="submit" {% if disabled %}disabled{% endif %}>Submit Order</button>
     </form>
 </div>
 
-{% endblock %}
+<script>
 
+    function toggleTransportation(el) {
+        const transportFieldset = document.querySelector('.transportFieldsetElement');
+        const transportRadios = document.querySelectorAll('input[name="mode"]');
+        const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
+
+
+        const isEatAtBigDaddy = el.value === "0" && el.checked;
+
+        if (isEatAtBigDaddy) {
+            transportFieldset.classList.add("show");
+            // Make transport radios required
+            transportRadios.forEach(radio => {
+                radio.required = true;
+            });
+        } else {
+            transportFieldset.classList.remove("show");
+            // Remove required so validation doesn't block
+            transportRadios.forEach(radio => {
+                radio.required = false;
+                radio.checked = false;
+            });
+            lipotiRadios.forEach(radio => {
+                radio.required = false;
+                radio.checked = false;
+            });
+        }
+    }
+
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+        radio.addEventListener("change", function () {
+            const lipotisetElement = document.querySelector('.lipotisetElement');
+            const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
+
+            if (radio.value === "2" && radio.checked) {
+                lipotisetElement.classList.add("show");
+                lipotiRadios.forEach(r => r.required = true);
+            } else {
+                lipotisetElement.classList.remove("show");
+                lipotiRadios.forEach(r => {
+                    r.required = false;
+                    r.checked = false;
+                });
+            }
+        });
+    });
+
+</script>
+
+{% endblock %}

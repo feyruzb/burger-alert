@@ -12,19 +12,21 @@
         <div style="display: flex; flex-wrap: wrap; gap: 30px;">
             <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                 {% for car, passengers in list_of_distributes %}
-                    <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
-                        <h3>Car: <span class="pico-color-red-450">{{ car }}</span></h3>
-                        <ul>
-                            {% for person in passengers %}
-                                <li><span class="pico-color-red-450">{{ person }}</span></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+                <div class="card"
+                    style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
+                    <h3>Car: <span class="pico-color-red-450">{{ car }}</span></h3>
+                    <ul>
+                        {% for person in passengers %}
+                        <li><span class="pico-color-red-450">{{ person }}</span></li>
+                        {% endfor %}
+                    </ul>
+                </div>
                 {% endfor %}
             </div>
         </div>
     </div>
     <div style="width: 90%; display: flex; flex-direction: column; align-items: center; gap: 40px;">
+        <!-- people taht didn't get a car -->
         <div>
             <h2>
                 People that didn't get a car (sent order too late)
@@ -32,11 +34,26 @@
         </div>
         <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
             {% for passenger in list_of_extra %}
-                <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
-                    <ul>
-                            <li><span class="pico-color-red-450">{{ passenger }}</span></li>
-                    </ul>
-                </div>
+            <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
+                <ul>
+                    <li><span class="pico-color-red-450">{{ passenger }}</span></li>
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        <!-- People that go themselfs -->
+        <div>
+            <h2>
+                People that are going themselfs.
+            </h2>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            {% for passenger in names_self_passengers %}
+            <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
+                <ul>
+                    <li><span class="pico-color-red-450">{{ passenger }}</span></li>
+                </ul>
+            </div>
             {% endfor %}
         </div>
     </div>

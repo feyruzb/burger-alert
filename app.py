@@ -7,6 +7,10 @@ from typing import Dict, List
 from sqlalchemy import and_
 from collections import defaultdict
 from sqlalchemy import distinct
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///orders.db'
@@ -21,12 +25,22 @@ MAX_PASSENGER_CNT = 4
 START_HOUR_OF_DAY = 1
 END_HOUR_OF_DAY = 13
 NO_TIME_CONSTRAINT = getenv("NO_TIME_CONSTRAINT") in ["true", "1"]
+# despite the name there is supposed to be only 1 driver
+APP_VERSION = os.getenv("APP_VERSION", "v0.0.0")
+LIPOTI_DRIVERS = os.getenv("LIPOTI_DRIVER")
+
+@app.context_processor
+def inject_version():
+    return dict(app_version=APP_VERSION)
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     order = db.Column(db.String(200), nullable=False)
-    mode = db.Column(db.Integer, nullable=False)
+    lipoti = db.Column(db.Integer, nullable=False)
+    takeout = db.Column(db.Integer, nullable=False)
+    t_mode = db.Column(db.Integer, nullable=False)
+
     date_created = db.Column(db.DateTime, default=datetime.now)
 
     def __repr__(self):
@@ -50,14 +64,25 @@ def index_page():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    name = request.form.get("name")
-    order = request.form.get("order")[:200]
-    mode = request.form.get("mode")
+    name = request.form.get("name", "Placeholder")
+    order = request.form.get("order", "Placeholder")[:200]
+    lipoti = request.form.get("lipoti", "Placeholder")
+    takeout = request.form.get("takeout", "Placeholder")
+
+    if takeout == "1":
+        t_mode = 0
+    else:
+        t_mode = request.form.get("mode", 0)
 
     if not is_now_burger_time():
-        return render_template("failed.html", error_msg = "not burger ordering time")
+        return render_template("failed.html",
+                               error_msg = "not burger ordering time")
 
-    order = Orders(name=name, order=order, mode = mode)
+    order = Orders(name=name,
+                   order=order,
+                   lipoti=lipoti,
+                   takeout=takeout,
+                   t_mode=t_mode)
 
     try:
         db.session.add(order)
@@ -66,11 +91,24 @@ def submit():
     except:
         return render_template("failed.html")
 
+class UserOrder:
+    def __init__(self, name,
+                 order=None,
+                 lipoti=None,
+                 takeout=None,
+                 t_mode=None):
+        self.name = name
+        self.order = order
+        self.liporti = lipoti
+        self.takeout = takeout
+        self.t_mode = t_mode
+
 @app.route("/today_orders")
 def return_todays_orders():
     today = date.today()
     start_of_today = datetime.combine(today, time.min)
     end_of_today = datetime.combine(today, time.max)
+
 
     orders = Orders.query.filter(
         and_(
@@ -79,58 +117,100 @@ def return_todays_orders():
         )
     ).order_by(Orders.date_created).all()
 
-    sorted_orders = defaultdict(list)
+    def squash_orders(name):
+        items = [order.order for order in orders if order.name == name]
+        result = ",".join(items)
+        return result
+
+    users_orders = []
     for order in orders:
-        sorted_orders[order.name].append(order.order)
+        if not any(uo.name == order.name for uo in users_orders):
+            user_order = UserOrder(
+                name=order.name,
+                order=squash_orders(order.name),
+                takeout=order.takeout,
+                t_mode=order.t_mode
+            )
+            users_orders.append(user_order)
 
-    sorted_orders_mega = {
-        name: ", ".join(item_list)
-        for name, item_list in sorted_orders.items()
-    }
-
-    return render_template("today_orders.html", orders=sorted_orders_mega)
-
+    return render_template("today_orders.html", orders=users_orders)
 
 @app.route("/car_distribution")
 def return_car_distribution():
     start_of_today = datetime.combine(date.today(), time.min)
     end_of_today = datetime.combine(date.today(), time.max)
 
-    # get list of people with car
-    people_with_cars = list(set([ order.name for order in Orders.query.filter(
+    names_wc = db.session.query(Orders.name).filter(
         Orders.date_created >= start_of_today,
         Orders.date_created <= end_of_today,
-        Orders.mode == 1
-    ).order_by(Orders.date_created).all() ]))
-
-    names = db.session.query(Orders.name).filter(
-        Orders.date_created >= start_of_today,
-        Orders.date_created <= end_of_today,
-        Orders.mode == 2
+        Orders.t_mode == 1
     ).distinct().order_by(Orders.date_created).all()
+    people_with_cars = [name[0] for name in names_wc]
 
-    people_without_cars = [name[0] for name in names]
+    names_nc = db.session.query(Orders.name).filter(
+        Orders.date_created >= start_of_today,
+        Orders.date_created <= end_of_today,
+        Orders.t_mode == 2
+    ).distinct().order_by(Orders.date_created).all()
+    people_without_cars = [name[0] for name in names_nc]
 
-    list_of_distributes: Dict[str, List[str]] = {}
-    list_of_extra = []
-    # Fill dict of drivers with passengers
-    for driver in people_with_cars:
-        list_of_distributes[driver] = list()
+    # lipoti priority
+    names_lipoti = db.session.query(Orders.name).filter(
+        Orders.date_created >= start_of_today,
+        Orders.date_created <= end_of_today,
+        Orders.lipoti == 1
+    ).distinct().order_by(Orders.date_created).all()
+    lipoti_passengers = [name[0] for name in names_lipoti]
 
-    driver_cnt = 0
+    # people that get in by themselfs
+    names_self_d = db.session.query(Orders.name).filter(
+        Orders.date_created >= start_of_today,
+        Orders.date_created <= end_of_today,
+        Orders.t_mode == 3
+    ).distinct().order_by(Orders.date_created).all()
+    names_self_passengers = [name[0] for name in names_self_d]
 
-    for ind, walker in enumerate(people_without_cars):
-        if ind+1 > (len(people_with_cars) * MAX_PASSENGER_CNT):
-            list_of_extra.append(walker)
-        else:
-            list_of_distributes[people_with_cars[driver_cnt]].append(walker)
-            driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+    if len(people_with_cars)>0:
 
-    list_of_distributes = list(list_of_distributes.items())
 
-    return render_template("car_distribution.html",
-                           list_of_distributes=list_of_distributes,
-                           list_of_extra=list_of_extra)
+
+        list_of_distributes: Dict[str, List[str]] = {}
+        # Fill dict of drivers with driver's names
+        for driver in people_with_cars:
+            list_of_distributes[driver] = list()
+
+        # Fill priority with people that want to go in lipoti
+        for walker in lipoti_passengers:
+            for driver in list_of_distributes:
+                if driver in LIPOTI_DRIVERS and len(list_of_distributes[driver])<=3:
+                        list_of_distributes[driver].append(walker)
+
+        list_of_extra = []
+        driver_cnt = 0
+        for walker in people_without_cars:
+            got_place = False
+            already_assigned = any(walker in group for group in list_of_distributes.values())
+            if not already_assigned:
+                for i in range(0,len(list_of_distributes)):
+                    if len(list_of_distributes[people_with_cars[driver_cnt]]) <=3 and got_place == False:
+                        list_of_distributes[people_with_cars[driver_cnt]].append(walker)
+                        got_place = True
+                        driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+                        break
+                    else:
+                        driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+                if got_place == False:
+                    list_of_extra.append(walker)
+                    driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+
+        list_of_distributes = list(list_of_distributes.items())
+
+        return render_template("car_distribution.html",
+                            list_of_distributes=list_of_distributes,
+                            list_of_extra=list_of_extra,
+                            names_self_passengers=names_self_passengers)
+    return render_template("failed.html",
+                               error_msg = "Unfortunately there are no drivers")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",

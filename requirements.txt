@@ -7,6 +7,7 @@ greenlet==3.2.3
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
+python-dotenv==1.1.1
 SQLAlchemy==2.0.42
 typing_extensions==4.14.1
 tzlocal==5.3.1

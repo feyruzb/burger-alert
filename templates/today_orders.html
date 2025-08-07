@@ -9,10 +9,28 @@
 <div class ="content">
     <h2>Today's Orders</h2>
     <ol style="word-break: break-all;">
-        {% for key, value in orders.items() %}
-            <li>
-                <span class="pico-color-red-450">{{ key }}</span>
-                ordered: <span class="pico-color-red-450">{{ value }}</span>
+        {% for user_obj in orders %}
+           <li {% if user_obj.takeout %}style="font-style: italic;"{% endif %}>
+                <span class="pico-color-red-450">{{ user_obj.name }}</span>
+
+                ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
+                {%if user_obj.takeout%}
+                Takeout: <span class="pico-color-red-450">YES
+                </span>
+                {% endif %}
+
+                <!-- Transportation: <span class="pico-color-red-450">
+                    {% if user_obj.t_mode == 1 %}
+                        Has a car and will drive people from office.
+                    {% elif user_obj.t_mode == 2  %}
+                        Wants to be driven by someone from office.
+                    {% elif user_obj.t_mode == 3  %}
+                        Will come by himself.
+                    {% else %}
+                        Ordered Takeout.
+                    {% endif %}
+                </span> -->
+
             </li>
         {% endfor %}
     </ol>
