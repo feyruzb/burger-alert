@@ -99,7 +99,7 @@ class UserOrder:
                  t_mode=None):
         self.name = name
         self.order = order
-        self.liporti = lipoti
+        self.lipoti = lipoti
         self.takeout = takeout
         self.t_mode = t_mode
 
@@ -162,7 +162,7 @@ def return_car_distribution():
     ).distinct().order_by(Orders.date_created).all()
     lipoti_passengers = [name[0] for name in names_lipoti]
 
-    # people that get in by themselfs
+    # people that get in by themselves
     names_self_d = db.session.query(Orders.name).filter(
         Orders.date_created >= start_of_today,
         Orders.date_created <= end_of_today,
@@ -170,9 +170,7 @@ def return_car_distribution():
     ).distinct().order_by(Orders.date_created).all()
     names_self_passengers = [name[0] for name in names_self_d]
 
-    if len(people_with_cars)>0:
-
-
+    if people_with_cars:
 
         list_of_distributes: Dict[str, List[str]] = {}
         # Fill dict of drivers with driver's names
@@ -191,8 +189,8 @@ def return_car_distribution():
             got_place = False
             already_assigned = any(walker in group for group in list_of_distributes.values())
             if not already_assigned:
-                for i in range(0,len(list_of_distributes)):
-                    if len(list_of_distributes[people_with_cars[driver_cnt]]) <=3 and got_place == False:
+                for _ in range(0,len(list_of_distributes)):
+                    if len(list_of_distributes[people_with_cars[driver_cnt]]) <=3 and not got_place:
                         list_of_distributes[people_with_cars[driver_cnt]].append(walker)
                         got_place = True
                         driver_cnt = (driver_cnt + 1) % len(people_with_cars)
