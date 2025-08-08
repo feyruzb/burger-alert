@@ -59,7 +59,9 @@
                     <input name="mode" value="3" type="radio" role="switch"/>
                     I will come by myself.
                 </label>
-                <!-- LIPÓTI BAKERY -->
+            </fieldset>
+            <!-- LIPÓTI BAKERY -->
+            <fieldset>
                 <div class="lipotisetElement field-hidden">
                 <legend>LIPÓTI BAKERY:</legend>
                     <label>
@@ -83,6 +85,7 @@
     function toggleTransportation(el) {
         const transportFieldset = document.querySelector('.transportFieldsetElement');
         const transportRadios = document.querySelectorAll('input[name="mode"]');
+        const lipotisetElement = document.querySelector('.lipotisetElement');
         const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
 
 
@@ -96,6 +99,7 @@
             });
         } else {
             transportFieldset.classList.remove("show");
+            lipotisetElement.classList.remove("show");
             // Remove required so validation doesn't block
             transportRadios.forEach(radio => {
                 radio.required = false;

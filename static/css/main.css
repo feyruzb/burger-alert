@@ -67,8 +67,22 @@ nav {
 }
 
 main {
-    min-height: calc(100vh - 100px);
+    min-height: calc(100vh - 100px - 60px);
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+footer {
+    height: 60px;
+    font-family: 'HomeVideo';
+    font-size: small;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+footer a {
+    text-decoration: underline wavy;
 }

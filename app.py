@@ -1,6 +1,6 @@
 from datetime import datetime, date, time
 from os import getenv
-from flask import Flask , render_template, request
+from flask import Flask, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
 from typing import Dict, List
@@ -9,6 +9,7 @@ from collections import defaultdict
 from sqlalchemy import distinct
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -178,28 +179,41 @@ def return_car_distribution():
             list_of_distributes[driver] = list()
 
         # Fill priority with people that want to go in lipoti
+        try:
+            lipoti_driver_set = set(json.loads(LIPOTI_DRIVERS or "[]"))
+        except Exception:
+            lipoti_driver_set = set()
+
         for walker in lipoti_passengers:
-            for driver in list_of_distributes:
-                if driver in LIPOTI_DRIVERS and len(list_of_distributes[driver])<=3:
+            for driver in people_with_cars:
+                if driver in lipoti_driver_set and len(list_of_distributes[driver]) < MAX_PASSENGER_CNT:
+                    if walker not in list_of_distributes[driver]:
                         list_of_distributes[driver].append(walker)
+                    break
+
 
         list_of_extra = []
         driver_cnt = 0
+        already_assigned = {p for riders in list_of_distributes.values() for p in riders}
+
         for walker in people_without_cars:
+            if walker in already_assigned:
+                continue
+
             got_place = False
-            already_assigned = any(walker in group for group in list_of_distributes.values())
-            if not already_assigned:
-                for _ in range(0,len(list_of_distributes)):
-                    if len(list_of_distributes[people_with_cars[driver_cnt]]) <=3 and not got_place:
-                        list_of_distributes[people_with_cars[driver_cnt]].append(walker)
-                        got_place = True
-                        driver_cnt = (driver_cnt + 1) % len(people_with_cars)
-                        break
-                    else:
-                        driver_cnt = (driver_cnt + 1) % len(people_with_cars)
-                if got_place == False:
-                    list_of_extra.append(walker)
+            for _ in range(len(people_with_cars)):
+                driver = people_with_cars[driver_cnt]
+                if len(list_of_distributes[driver]) < MAX_PASSENGER_CNT:
+                    list_of_distributes[driver].append(walker)
+                    already_assigned.add(walker)
+                    got_place = True
                     driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+                    break
+                driver_cnt = (driver_cnt + 1) % len(people_with_cars)
+
+            if not got_place:
+                list_of_extra.append(walker)
+                driver_cnt = (driver_cnt + 1) % len(people_with_cars)
 
         list_of_distributes = list(list_of_distributes.items())
 
