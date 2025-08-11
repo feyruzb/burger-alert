@@ -1,0 +1,5 @@
+burger-alert.feyruz.tech {
+	tls /certs/rsa.cert /certs/rsa.key
+
+	reverse_proxy burger-alert:80
+}

@@ -1,10 +1,18 @@
 services:
   burger_alert:
     build: .
-    container_name: burger_alert
-    ports:
-      - 80:80
+    container_name: burger-alert
     volumes:
       - ./instance:/app/instance
     restart: unless-stopped
-
+  caddy:
+    image: caddy
+    container_name: caddy
+    ports:
+      - 80:80
+      - 443:443
+      - 443:443/udp
+    volumes:
+      - ./caddy-conf:/etc/caddy:ro
+      - ./certs:/certs:ro
+    restart: unless-stopped
