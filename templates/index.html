@@ -99,13 +99,9 @@
             });
         } else {
             transportFieldset.classList.remove("show");
-            lipotisetElement.classList.remove("show");
+            updateLipotiSection(false);
             // Remove required so validation doesn't block
             transportRadios.forEach(radio => {
-                radio.required = false;
-                radio.checked = false;
-            });
-            lipotiRadios.forEach(radio => {
                 radio.required = false;
                 radio.checked = false;
             });
@@ -114,19 +110,7 @@
 
     document.querySelectorAll('input[name="mode"]').forEach(radio => {
         radio.addEventListener("change", function () {
-            const lipotisetElement = document.querySelector('.lipotisetElement');
-            const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
-
-            if (radio.value === "2" && radio.checked) {
-                lipotisetElement.classList.add("show");
-                lipotiRadios.forEach(r => r.required = true);
-            } else {
-                lipotisetElement.classList.remove("show");
-                lipotiRadios.forEach(r => {
-                    r.required = false;
-                    r.checked = false;
-                });
-            }
+            updateLipotiSection(radio.value === "2" && radio.checked);
         });
     });
 
