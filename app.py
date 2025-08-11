@@ -70,9 +70,14 @@ def submit():
     lipoti = request.form.get("lipoti", "Placeholder")
     takeout = request.form.get("takeout", "Placeholder")
 
-    if takeout == "1":
+    print(takeout)
+
+    # if it is a takeout order, set mode to 0 if not set to mode
+    if takeout == "takeout":
+        takeout = 1
         t_mode = 0
     else:
+        takeout = 0
         t_mode = request.form.get("mode", 0)
 
     if not is_now_burger_time():
@@ -98,6 +103,7 @@ class UserOrder:
                  lipoti=None,
                  takeout=None,
                  t_mode=None):
+
         self.name = name
         self.order = order
         self.lipoti = lipoti
