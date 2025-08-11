@@ -6,7 +6,7 @@
 
 {%block body %}
 
-<div class ="content">
+<div class="content">
     <h2>Place Your Order</h2>
     <div class="notification">
         <span>ORDER HISTORY IS RESET EVERY 24 HOURS AT MIDNIGHT</span>
@@ -21,29 +21,113 @@
         <input type="text" id="order" name="order" required>
 
         <br><br>
-
+        <!-- takeout or dine in -->
         <fieldset>
-            <legend>Transportation:</legend>
-
+            <legend>Takeout:</legend>
             <label>
-                <input name="mode" value="1" type="radio" role="switch" required />
-                I come to the office with car and I will drive.
+                <input name="takeout" value="takeout" type="radio" required />
+                I want a takeout brought to the office.
             </label>
 
             <label>
-                <input name="mode" value="2" type="radio" role="switch" required />
-                I come to the office without car and want to be driven.
-            </label>
-
-            <label>
-                <input name="mode" value="3" type="radio" role="switch" required />
-                I will come by myself.
+                <input name="takeout" value="dinein" type="radio" required />
+                I want to eat at Big Daddy
             </label>
         </fieldset>
+
+        <!-- LIPÓTI BAKERY -->
+        <fieldset>
+
+        </fieldset>
+        <!-- Transportation -->
+
+        <div class="transportFieldsetElement field-hidden">
+            <fieldset>
+                <legend>Transportation:</legend>
+
+                <label>
+                    <input name="mode" value="1" type="radio" />
+                    I come to the office with car and I will drive.
+                </label>
+
+                <label>
+                    <input name="mode" value="2" type="radio" />
+                    I come to the office without car and want to be driven.
+                </label>
+
+                <label>
+                    <input name="mode" value="3" type="radio" />
+                    I will come by myself.
+                </label>
+            </fieldset>
+            <!-- LIPÓTI BAKERY -->
+            <fieldset>
+                <div class="lipotisetElement field-hidden">
+                    <legend>LIPÓTI BAKERY:</legend>
+                    <label>
+                        <input name="lipoti" value="1" type="radio" required />
+                        Yes, I want to go to LIPÓTI BAKERY.
+                    </label>
+                    <label>
+                        <input name="lipoti" value="0" type="radio" required />
+                        NO, I do not want to go to LIPÓTI BAKERY.
+                    </label>
+                </div>
+            </fieldset>
+        </div>
 
         <button type="submit" {% if disabled %}disabled{% endif %}>Submit Order</button>
     </form>
 </div>
 
-{% endblock %}
+<script>
 
+    document.addEventListener("change", function (event) {
+        const target = event.target;
+
+        const transportFieldset = document.querySelector('.transportFieldsetElement');
+        const transportRadios = document.querySelectorAll('input[name="mode"]');
+        const lipotisetElement = document.querySelector('.lipotisetElement');
+        const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
+
+        // --- takeout radio logic ---
+        if (target.name === "takeout") {
+            const isEatAtBigDaddy = target.value === "dinein" && target.checked;
+
+            if (isEatAtBigDaddy) {
+                transportFieldset.classList.add("show");
+                transportRadios.forEach(r => r.required = true);
+            } else {
+                transportFieldset.classList.remove("show");
+                lipotisetElement.classList.remove("show");
+
+                transportRadios.forEach(r => {
+                    r.required = false;
+                    r.checked = false;
+                });
+                lipotiRadios.forEach(r => {
+                    r.required = false;
+                    r.checked = false;
+                });
+            }
+        }
+
+        // --- transport mode radio logic ---
+        if (target.name === "mode") {
+            if (target.value === "2" && target.checked) {
+                lipotisetElement.classList.add("show");
+                lipotiRadios.forEach(r => r.required = true);
+            } else {
+                lipotisetElement.classList.remove("show");
+                lipotiRadios.forEach(r => {
+                    r.required = false;
+                    r.checked = false;
+                });
+            }
+        }
+    });
+
+
+</script>
+
+{% endblock %}

@@ -11,21 +11,22 @@
 </head>
 
 <body>
-    <span id="version" class="pico-color-red-450">v0.1.0-beta</span>
+    <span id="version" class="pico-color-red-450">{{app_version}}</span>
     <header>
         <nav>
-            <a href="/" class="pico-color-red-450">
-                Home
-            </a>
-
+            <a href="/" class="pico-color-red-450">Home</a>
             <a href="/today_orders" class="pico-color-red-450">Today's orders</a>
-
             <a href="/car_distribution" class="pico-color-red-450">Car Distribution</a>
         </nav>
     </header>
     <main class="container">
         {%block body %} {% endblock %}
     </main>
+    <footer>
+        <div>
+            <a class="pico-color-yellow-300" target="_blank" href="https://github.com/feyruzb/burger-alert">Burger Alert repo</a>
+        </div>
+    </footer>
 </body>
 
 </html>
