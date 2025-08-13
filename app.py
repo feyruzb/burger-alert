@@ -70,8 +70,6 @@ def submit():
     lipoti = request.form.get("lipoti", "Placeholder")
     takeout = request.form.get("takeout", "Placeholder")
 
-    print(takeout)
-
     # if it is a takeout order, set mode to 0 if not set to mode
     if takeout == "takeout":
         takeout = 1
@@ -126,7 +124,7 @@ def return_todays_orders():
 
     def squash_orders(name):
         items = [order.order for order in orders if order.name == name]
-        result = ",".join(items)
+        result = ", ".join(items)
         return result
 
     users_orders = []
@@ -140,7 +138,13 @@ def return_todays_orders():
             )
             users_orders.append(user_order)
 
-    return render_template("today_orders.html", orders=users_orders)
+    buckets = [[], []]  # index 0 -> dine-in, index 1 -> takeout
+    for uo in users_orders:
+        buckets[uo.takeout].append(uo)
+
+    return render_template("today_orders.html",
+                           dinein_orders=buckets[0],
+                           takeout_orders=buckets[1] )
 
 @app.route("/car_distribution")
 def return_car_distribution():
