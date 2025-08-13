@@ -86,3 +86,18 @@ footer {
 footer a {
     text-decoration: underline wavy;
 }
+
+dialog > article {
+    max-width: 90dvw;
+}
+
+dialog > article > header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+dialog > article > img {
+    margin: 20px auto;
+    cursor: pointer;
+}
