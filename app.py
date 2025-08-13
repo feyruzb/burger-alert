@@ -140,7 +140,13 @@ def return_todays_orders():
             )
             users_orders.append(user_order)
 
-    return render_template("today_orders.html", orders=users_orders)
+    buckets = [[], []]  # index 0 -> dine-in, index 1 -> takeout
+    for uo in users_orders:
+        buckets[uo.takeout].append(uo)
+
+    return render_template("today_orders.html",
+                           dinein_orders=buckets[0],
+                           takeout_orders=buckets[1] )
 
 @app.route("/car_distribution")
 def return_car_distribution():

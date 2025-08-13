@@ -7,9 +7,19 @@
 {%block body %}
 
 <div class ="content">
-    <h2>Today's Orders</h2>
+    <h2>DineIn Orders</h2>
     <ol style="word-break: break-all;">
-        {% for user_obj in orders %}
+        {% for user_obj in dinein_orders %}
+           <li {% if user_obj.takeout %}style="font-style: italic;"{% endif %}>
+                <span class="pico-color-red-450">{{ user_obj.name }}</span>
+
+                ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
+            </li>
+        {% endfor %}
+    </ol>
+    <h2>Takeout Orders</h2>
+    <ol style="word-break: break-all;">
+        {% for user_obj in takeout_orders %}
            <li {% if user_obj.takeout %}style="font-style: italic;"{% endif %}>
                 <span class="pico-color-red-450">{{ user_obj.name }}</span>
 
@@ -18,18 +28,6 @@
                 Takeout: <span class="pico-color-red-450">YES
                 </span>
                 {% endif %}
-
-                <!-- Transportation: <span class="pico-color-red-450">
-                    {% if user_obj.t_mode == 1 %}
-                        Has a car and will drive people from office.
-                    {% elif user_obj.t_mode == 2  %}
-                        Wants to be driven by someone from office.
-                    {% elif user_obj.t_mode == 3  %}
-                        Will come by himself.
-                    {% else %}
-                        Ordered Takeout.
-                    {% endif %}
-                </span> -->
 
             </li>
         {% endfor %}
