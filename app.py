@@ -70,8 +70,6 @@ def submit():
     lipoti = request.form.get("lipoti", "Placeholder")
     takeout = request.form.get("takeout", "Placeholder")
 
-    print(takeout)
-
     # if it is a takeout order, set mode to 0 if not set to mode
     if takeout == "takeout":
         takeout = 1
