@@ -22,8 +22,89 @@
             <a href="/" class="pico-color-red-450">Home</a>
             <a href="/today_orders" class="pico-color-red-450">Today's orders</a>
             <a href="/car_distribution" class="pico-color-red-450">Car Distribution</a>
+            <a href="#" id="menu-trigger" class="pico-color-red-450">Menu</a>
         </nav>
     </header>
+    <dialog id="menu-dialog">
+        <article>
+            <header>
+                <span></span>
+                <p>
+                    <strong>Menu</strong>
+                </p>
+                <button aria-label="Close" rel="prev" id="menu-close"></button>
+            </header>
+            <div class="flex-col-center">
+                <img src="/static/images/big-daddy-menu-1.jpg" alt="Big Daddy menu image 1" class="img-open-onclick">
+                <img src="/static/images/big-daddy-menu-2.jpg" alt="Big Daddy menu image 2" class="img-open-onclick">
+            </div>
+        </article>
+    </dialog>
+    <script>
+        const menuDialogEl = document.querySelector("#menu-dialog");
+        const menuTriggerEl = document.querySelector("#menu-trigger");
+        const menuCloseEl = document.querySelector("#menu-close");
+
+        function closeMenu() {
+            document.body.classList.add("modal-is-closing");
+            setTimeout(() => {
+                document.body.classList.remove("modal-is-closing");
+                document.body.classList.remove("modal-is-open");
+                menuDialogEl.close();
+            }, 200);
+        }
+
+        function openMenu() {
+            document.body.classList.add("modal-is-open");
+            document.body.classList.add("modal-is-opening");
+            setTimeout(() => {
+                document.body.classList.remove("modal-is-opening");
+            }, 200);
+            menuDialogEl.showModal();
+        }
+
+        menuTriggerEl.addEventListener("click", function () {
+            if (menuDialogEl.open) {
+                closeMenu();
+            } else {
+                openMenu();
+            }
+        });
+
+        menuCloseEl.addEventListener("click", function () {
+            if (!menuDialogEl.open ||
+                document.body.classList.contains("modal-is-opening") ||
+                document.body.classList.contains("modal-is-closing")) return;
+
+            closeMenu();
+        });
+
+        document.addEventListener("click", function (event) {
+            if (!menuDialogEl.open ||
+                document.body.classList.contains("modal-is-opening") ||
+                document.body.classList.contains("modal-is-closing")) return;
+
+            if (!menuDialogEl.querySelector("article").contains(event.target)) {
+                closeMenu();
+            }
+        });
+
+        document.addEventListener("keydown", function (event) {
+            if (!menuDialogEl.open ||
+                document.body.classList.contains("modal-is-opening") ||
+                document.body.classList.contains("modal-is-closing")) return;
+
+            if (event.key === "Escape") {
+                closeMenu();
+            }
+        });
+
+        document.querySelectorAll(".img-open-onclick").forEach(function (el) {
+            el.addEventListener("click", function (el) {
+                window.open(el.target.src);
+            });
+        });
+    </script>
     <main class="container">
         {%block body %} {% endblock %}
     </main>
