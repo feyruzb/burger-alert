@@ -124,7 +124,7 @@ def return_todays_orders():
 
     def squash_orders(name):
         items = [order.order for order in orders if order.name == name]
-        result = ",".join(items)
+        result = ", ".join(items)
         return result
 
     users_orders = []
