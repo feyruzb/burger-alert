@@ -10,11 +10,9 @@
     <h2>DineIn Orders</h2>
     <ol style="word-break: break-all;">
         {% for user_obj in dinein_orders %}
-           <li {% if user_obj.takeout %}style="font-style: italic;"{% endif %}>
                 <span class="pico-color-red-450">{{ user_obj.name }}</span>
 
                 ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
-            </li>
         {% endfor %}
     </ol>
     <h2>Takeout Orders</h2>
