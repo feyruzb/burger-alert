@@ -98,6 +98,12 @@ dialog > article > header {
 }
 
 dialog > article > img {
-    margin: 20px auto;
     cursor: pointer;
+}
+
+.flex-col-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
 }
