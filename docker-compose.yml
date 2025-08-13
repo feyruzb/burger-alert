@@ -5,6 +5,7 @@ services:
     volumes:
       - ./instance:/app/instance
     restart: unless-stopped
+    env_file: .env
   caddy:
     image: caddy
     container_name: caddy
