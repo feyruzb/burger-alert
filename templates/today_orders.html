@@ -10,9 +10,10 @@
     <h2>DineIn Orders</h2>
     <ol style="word-break: break-all;">
         {% for user_obj in dinein_orders %}
-                <span class="pico-color-red-450">{{ user_obj.name }}</span>
-
-                ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
+        <li>
+            <span class="pico-color-red-450">{{ user_obj.name }}</span>
+            ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
+        </li>
         {% endfor %}
     </ol>
     <h2>Takeout Orders</h2>
