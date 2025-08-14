@@ -39,8 +39,7 @@
 
             ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
             {% if user_obj.takeout %}
-            Takeout: <span class="pico-color-red-450">YES
-            </span>
+            Takeout: <span class="pico-color-red-450">YES</span>
             {% endif %}
             <form action="/orders/delete" method="post" class="delete_button_wrapper" onsubmit="return confirm('Are you sure?');">
                 <input type="hidden" name="name" value="{{ user_obj.name }}">
