@@ -1,6 +1,7 @@
 FROM python:3.12-alpine
 
-ENV TZ=Europe/Budapest
+ARG TZ=Europe/Budapest
+ENV TZ=$TZ
 
 COPY requirements.txt /app/requirements.txt
 WORKDIR /app
