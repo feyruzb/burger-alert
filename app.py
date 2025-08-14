@@ -1,6 +1,6 @@
 from datetime import datetime, date, time
 from os import getenv
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
 from typing import Dict, List
@@ -34,6 +34,19 @@ LIPOTI_DRIVERS = os.getenv("LIPOTI_DRIVER")
 def inject_version():
     return dict(app_version=APP_VERSION)
 
+class UserOrder:
+    def __init__(self, name,
+                 order=None,
+                 lipoti=None,
+                 takeout=None,
+                 t_mode=None):
+
+        self.name = name
+        self.order = order
+        self.lipoti = lipoti
+        self.takeout = takeout
+        self.t_mode = t_mode
+
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
@@ -50,6 +63,20 @@ class Orders(db.Model):
 if not Path('instance/orders.db').exists():
     with app.app_context():
         db.create_all()
+
+def get_people_with_cars():
+    """
+    Returns a list of people that are drivers.
+    """
+    start_of_today = datetime.combine(date.today(), time.min)
+    end_of_today = datetime.combine(date.today(), time.max)
+
+    names_wc = db.session.query(Orders.name).filter(
+        Orders.date_created >= start_of_today,
+        Orders.date_created <= end_of_today,
+        Orders.t_mode == 1
+    ).distinct().order_by(Orders.date_created).all()
+    return [name[0] for name in names_wc]
 
 def is_now_burger_time():
     if app.debug or NO_TIME_CONSTRAINT:
@@ -95,25 +122,33 @@ def submit():
     except:
         return render_template("failed.html")
 
-class UserOrder:
-    def __init__(self, name,
-                 order=None,
-                 lipoti=None,
-                 takeout=None,
-                 t_mode=None):
+@app.route("/orders/delete", methods=["POST"])
+def delete_order():
+    name = request.form.get("name")
+    if not name:
+        return render_template("failed.html",
+                               error_msg="No such name exists in database")
 
-        self.name = name
-        self.order = order
-        self.lipoti = lipoti
-        self.takeout = takeout
-        self.t_mode = t_mode
+
+    try:
+        db.session.query(Orders).filter(
+            Orders.name == name
+            ).delete()
+
+        db.session.commit()
+    except:
+        return render_template("failed.html")
+
+    return redirect("/today_orders")
+
 
 @app.route("/today_orders")
 def return_todays_orders():
     today = date.today()
     start_of_today = datetime.combine(today, time.min)
     end_of_today = datetime.combine(today, time.max)
-
+    # limit of people that can go by cars
+    top_limit = len(get_people_with_cars()) * 5
 
     orders = Orders.query.filter(
         and_(
@@ -139,8 +174,16 @@ def return_todays_orders():
             users_orders.append(user_order)
 
     buckets = [[], []]  # index 0 -> dine-in, index 1 -> takeout
+
+    cnt = 0
     for uo in users_orders:
-        buckets[uo.takeout].append(uo)
+        if uo.t_mode == 3:
+            buckets[0].append(uo)
+        elif uo.takeout or cnt >= top_limit:
+            buckets[1].append(uo)
+        else:
+            buckets[0].append(uo)
+            cnt+=1
 
     return render_template("today_orders.html",
                            dinein_orders=buckets[0],
@@ -151,12 +194,7 @@ def return_car_distribution():
     start_of_today = datetime.combine(date.today(), time.min)
     end_of_today = datetime.combine(date.today(), time.max)
 
-    names_wc = db.session.query(Orders.name).filter(
-        Orders.date_created >= start_of_today,
-        Orders.date_created <= end_of_today,
-        Orders.t_mode == 1
-    ).distinct().order_by(Orders.date_created).all()
-    people_with_cars = [name[0] for name in names_wc]
+    people_with_cars = get_people_with_cars()
 
     names_nc = db.session.query(Orders.name).filter(
         Orders.date_created >= start_of_today,
