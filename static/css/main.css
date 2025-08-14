@@ -107,3 +107,19 @@ dialog > article > img {
     align-items: center;
     gap: 20px;
 }
+
+.delete_button_wrapper {
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.delete_button {
+    padding: 3px;
+    margin: 2px;
+    font-size: 10px;
+    background-color: var(--pico-color-red-450);
+    border: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}

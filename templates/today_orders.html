@@ -6,29 +6,58 @@
 
 {%block body %}
 
-<div class ="content">
+<div class="content">
     <h2>DineIn Orders</h2>
     <ol style="word-break: break-all;">
         {% for user_obj in dinein_orders %}
         <li>
             <span class="pico-color-red-450">{{ user_obj.name }}</span>
             ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
+            <form action="/orders/delete" method="post" class="delete_button_wrapper" onsubmit="return confirm('Are you sure?');">
+                <input type="hidden" name="name" value="{{ user_obj.name }}">
+                <button type="submit" class="delete_button">
+                    <span style="display: none;">Delete</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-trash2-icon lucide-trash-2">
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                </button>
+            </form>
         </li>
         {% endfor %}
     </ol>
     <h2>Takeout Orders</h2>
     <ol style="word-break: break-all;">
         {% for user_obj in takeout_orders %}
-           <li {% if user_obj.takeout %}style="font-style: italic;"{% endif %}>
-                <span class="pico-color-red-450">{{ user_obj.name }}</span>
+        <li {% if user_obj.takeout %}style="font-style: italic;" {% endif %}>
+            <span class="pico-color-red-450">{{ user_obj.name }}</span>
 
-                ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
-                {% if user_obj.takeout %}
-                Takeout: <span class="pico-color-red-450">YES
-                </span>
-                {% endif %}
-
-            </li>
+            ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
+            {% if user_obj.takeout %}
+            Takeout: <span class="pico-color-red-450">YES
+            </span>
+            {% endif %}
+            <form action="/orders/delete" method="post" class="delete_button_wrapper" onsubmit="return confirm('Are you sure?');">
+                <input type="hidden" name="name" value="{{ user_obj.name }}">
+                <button type="submit" class="delete_button">
+                    <span style="display: none;">Delete</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-trash2-icon lucide-trash-2">
+                        <path d="M10 11v6" />
+                        <path d="M14 11v6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                </button>
+            </form>
+        </li>
         {% endfor %}
     </ol>
 </div>

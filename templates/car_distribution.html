@@ -54,7 +54,12 @@
                     <li><span class="pico-color-red-450">{{ passenger }}</span></li>
                 </ul>
             </div>
+            {% else %}
+            <p>
+                There are no poeople that are going themselves.
+            </p>
             {% endfor %}
+
         </div>
     </div>
 </div>
