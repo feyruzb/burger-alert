@@ -1,10 +1,10 @@
 FROM python:3.12-alpine
 
+RUN apk add --no-cache tzdata
+
 ARG TZ=Europe/Budapest
 ENV TZ=$TZ
-RUN apk add --no-cache tzdata
-ENV TZ=$TZ
-RUN ln -sf /usr/share/zoneinfo/$TZ /etc/localtime
+
 COPY requirements.txt /app/requirements.txt
 WORKDIR /app
 
