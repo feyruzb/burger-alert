@@ -31,6 +31,19 @@ body {
     transition: max-height 1s ease-in-out;
 }
 
+/* LIPÓTI USER DRIVER OPTION */
+
+.lipotiUserDriverElement {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-in-out;
+}
+
+.lipotiUserDriverElement.show {
+    max-height: 100vh;
+    transition: max-height 1s ease-in-out;
+}
+
 #version {
     position: absolute;
     top: 0;

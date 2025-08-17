@@ -28,7 +28,6 @@ END_HOUR_OF_DAY = 13
 NO_TIME_CONSTRAINT = getenv("NO_TIME_CONSTRAINT") in ["true", "1"]
 # despite the name there is supposed to be only 1 driver
 APP_VERSION = os.getenv("APP_VERSION", "v0.0.0")
-LIPOTI_DRIVERS = os.getenv("LIPOTI_DRIVER")
 
 @app.context_processor
 def inject_version():
@@ -51,6 +50,7 @@ class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     order = db.Column(db.String(200), nullable=False)
+    lipoti_d = db.Column(db.Integer, nullable=False)
     lipoti = db.Column(db.Integer, nullable=False)
     takeout = db.Column(db.Integer, nullable=False)
     t_mode = db.Column(db.Integer, nullable=False)
@@ -78,6 +78,20 @@ def get_people_with_cars():
     ).distinct().order_by(Orders.date_created).all()
     return [name[0] for name in names_wc]
 
+def get_list_of_lipoti_drivers():
+    """
+    Returns a list of people that want to be drivers for LIPÓTI.
+    """
+    start_of_today = datetime.combine(date.today(), time.min)
+    end_of_today = datetime.combine(date.today(), time.max)
+
+    names_wc = db.session.query(Orders.name).filter(
+        Orders.date_created >= start_of_today,
+        Orders.date_created <= end_of_today,
+        Orders.lipoti_d == 1
+    ).distinct().order_by(Orders.date_created).all()
+    return [name[0] for name in names_wc]
+
 def is_now_burger_time():
     if app.debug or NO_TIME_CONSTRAINT:
         return True
@@ -94,6 +108,7 @@ def index_page():
 def submit():
     name = request.form.get("name", "Placeholder")
     order = request.form.get("order", "Placeholder")[:200]
+    lipoti_d = request.form.get("lipoti_d", 0)
     lipoti = request.form.get("lipoti", "Placeholder")
     takeout = request.form.get("takeout", "Placeholder")
 
@@ -111,6 +126,7 @@ def submit():
 
     order = Orders(name=name,
                    order=order,
+                   lipoti_d=lipoti_d,
                    lipoti=lipoti,
                    takeout=takeout,
                    t_mode=t_mode)
@@ -194,6 +210,8 @@ def return_car_distribution():
     start_of_today = datetime.combine(date.today(), time.min)
     end_of_today = datetime.combine(date.today(), time.max)
 
+    lipoti_drivers = get_list_of_lipoti_drivers()
+
     people_with_cars = get_people_with_cars()
 
     names_nc = db.session.query(Orders.name).filter(
@@ -228,8 +246,9 @@ def return_car_distribution():
 
         # Fill priority with people that want to go in lipoti
         try:
-            lipoti_driver_set = set(json.loads(LIPOTI_DRIVERS or "[]"))
-        except Exception:
+            lipoti_driver_set = set(lipoti_drivers)
+        except Exception as e:
+            print(f"Error parsing LIPOTI_DRIVERS: {e}")
             lipoti_driver_set = set()
 
         for walker in lipoti_passengers:
