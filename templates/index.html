@@ -60,6 +60,20 @@
                     I will come by myself.
                 </label>
             </fieldset>
+            <!-- LIPOTI USER DRIVER OPTION -->
+            <fieldset>
+                <div class="lipotiUserDriverElement field-hidden">
+                    <legend>LIPÓTI USER DRIVER OPTION:</legend>
+                    <label>
+                        <input name="lipoti_d" value="1" type="radio" required />
+                        Yes, I want to be a driver for LIPÓTI.
+                    </label>
+                    <label>
+                        <input name="lipoti_d" value="0" type="radio" required />
+                        NO, I do not want to be a driver for LIPÓTI.
+                    </label>
+                </div>
+            </fieldset>
             <!-- LIPÓTI BAKERY -->
             <fieldset>
                 <div class="lipotisetElement field-hidden">
@@ -89,6 +103,9 @@
         const transportRadios = document.querySelectorAll('input[name="mode"]');
         const lipotisetElement = document.querySelector('.lipotisetElement');
         const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
+        // --- lipoti user driver logic ---
+        const lipotiUserDriverElement = document.querySelector('.lipotiUserDriverElement');
+        const lipotiUserDriverRadios = document.querySelectorAll('input[name="lipoti_d"]');
 
         // --- takeout radio logic ---
         if (target.name === "takeout") {
@@ -99,7 +116,9 @@
                 transportRadios.forEach(r => r.required = true);
             } else {
                 transportFieldset.classList.remove("show");
+                lipotiUserDriverElement.classList.remove("show");
                 lipotisetElement.classList.remove("show");
+
 
                 transportRadios.forEach(r => {
                     r.required = false;
@@ -111,7 +130,19 @@
                 });
             }
         }
-
+        // --- lipoti user driver logic ---
+        if (target.name === "mode") {
+            if (target.value === "1" && target.checked) {
+                lipotiUserDriverElement.classList.add("show");
+                lipotiUserDriverRadios.forEach(r => r.required = true);
+            } else {
+                lipotiUserDriverElement.classList.remove("show");
+                lipotiUserDriverRadios.forEach(r => {
+                    r.required = false;
+                    r.checked = false;
+                });
+            }
+        }
         // --- transport mode radio logic ---
         if (target.name === "mode") {
             if (target.value === "2" && target.checked) {
