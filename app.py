@@ -288,8 +288,10 @@ def return_car_distribution():
                             list_of_distributes=list_of_distributes,
                             list_of_extra=list_of_extra,
                             names_self_passengers=names_self_passengers)
-    return render_template("failed.html",
-                               error_msg = "Unfortunately there are no drivers")
+    return render_template("car_distribution.html",
+                            list_of_distributes=[],
+                            list_of_extra=[],
+                            names_self_passengers=[])
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",
