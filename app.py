@@ -248,7 +248,7 @@ def return_car_distribution():
         try:
             lipoti_driver_set = set(lipoti_drivers)
         except Exception as e:
-            print(f"Error parsing LIPOTI_DRIVERS: {e}")
+            print(f"Error parsing lipoti_drivers: {e}")
             lipoti_driver_set = set()
 
         for walker in lipoti_passengers:
