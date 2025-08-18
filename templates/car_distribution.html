@@ -21,6 +21,10 @@
                         {% endfor %}
                     </ul>
                 </div>
+                {% else %}
+                <p>
+                    There are cuurently no drivers :/
+                </p>
                 {% endfor %}
             </div>
         </div>
@@ -39,6 +43,10 @@
                     <li><span class="pico-color-red-450">{{ passenger }}</span></li>
                 </ul>
             </div>
+            {% else %}
+            <p>
+                There are no poeople that did not get a car.
+            </p>
             {% endfor %}
         </div>
         <!-- People that go themselves -->
