@@ -5,11 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
 from typing import Dict, List
 from sqlalchemy import and_
-from collections import defaultdict
-from sqlalchemy import distinct
 from dotenv import load_dotenv
-import os
-import json
 
 load_dotenv()
 
@@ -27,7 +23,7 @@ START_HOUR_OF_DAY = 1
 END_HOUR_OF_DAY = 13
 NO_TIME_CONSTRAINT = getenv("NO_TIME_CONSTRAINT") in ["true", "1"]
 # despite the name there is supposed to be only 1 driver
-APP_VERSION = os.getenv("APP_VERSION", "v0.0.0")
+APP_VERSION = getenv("APP_VERSION", "v0.0.0")
 
 @app.context_processor
 def inject_version():
