@@ -1,168 +1,250 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 
-{%block head %}
-<title>Ordering page</title>
+{% block head %}
+<title>Burger Alert - Order</title>
 {% endblock %}
 
-{%block body %}
+{% block body %}
+<h1 class="page-title">PLACE YOUR ORDER</h1>
+<p class="page-subtitle">THURSDAYS · BIG DADDY BURGERS</p>
 
-<div class="content">
-    <h2>Place Your Order</h2>
-    <div class="notification">
-        <span>ORDER HISTORY IS RESET EVERY 24 HOURS AT MIDNIGHT</span>
+<!-- Countdown timer -->
+<div class="countdown {{ countdown_state }}" id="countdown">
+  <span class="countdown-dot"></span>
+  <span id="countdown-label">{{ countdown_label }}</span>
+  {% if order_count %}<span class="countdown-orders">· {{ order_count }} order{{ 's' if order_count != 1 }}</span>{% endif %}
+</div>
+
+<div class="notice">⚠ ORDER HISTORY IS RESET EVERY 24 HOURS AT MIDNIGHT</div>
+
+<form action="/submit" method="POST" id="order-form">
+  <div class="ticket">
+    <div class="ticket-header">
+      <span class="ticket-label">NEW ORDER TICKET</span>
+      {% if disabled %}<span class="ticket-label" style="color:var(--red)">ORDERING CLOSED</span>{% endif %}
     </div>
-    <form action="/submit" method="POST">
-        <label for="name">Your Name:</label>
-        <input type="text" id="name" name="name" required>
+    <div class="ticket-body">
 
-        <br><br>
+      <div class="field">
+        <label class="field-label" for="name">Your Name</label>
+        <input class="field-input" type="text" id="name" name="name" required placeholder="e.g. Alex">
+      </div>
 
-        <label for="order">Order Description (200 char max):</label>
-        <input type="text" id="order" name="order" required>
+      <div class="field">
+        <label class="field-label" for="order">Order Description</label>
+        <input class="field-input" type="text" id="order" name="order" required maxlength="200" placeholder="Double cheeseburger, extra pickles...">
+        <span class="char-count"><span id="char-count">0</span> / 200</span>
+      </div>
 
-        <br><br>
-        <!-- takeout or dine in -->
-        <fieldset>
-            <legend>Takeout:</legend>
-            <label>
-                <input name="takeout" value="takeout" type="radio" required />
-                I want a takeout brought to the office.
+      <!-- Live preview -->
+      <div class="order-preview" id="order-preview">
+        <div class="order-preview-label">ORDER PREVIEW</div>
+        <div class="order-preview-empty" id="preview-empty">Fill in your name and order above...</div>
+        <div class="order-preview-name" id="preview-name" style="display:none"></div>
+        <div class="order-preview-order" id="preview-order" style="display:none"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Dining Preference</label>
+        <div class="radio-group" id="takeout-group">
+          <label class="radio-option" data-value="takeout">
+            <input type="radio" name="takeout" value="takeout" required>
+            <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+            <div>
+              <div class="radio-text">Takeout → deliver to office</div>
+              <div class="radio-sub">We'll bring it to the office for you.</div>
+            </div>
+          </label>
+          <label class="radio-option" data-value="dinein">
+            <input type="radio" name="takeout" value="dinein" required>
+            <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+            <div>
+              <div class="radio-text">Dine-in → eat at Big Daddy</div>
+              <div class="radio-sub">You'll eat at Big Daddy.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="collapsible" id="transport-section">
+        <div class="field">
+          <label class="field-label">Transportation</label>
+          <div class="radio-group" id="mode-group">
+            <label class="radio-option" data-value="1">
+              <input type="radio" name="mode" value="1">
+              <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+              <div>
+                <div class="radio-text">I have a car and will drive</div>
+                <div class="radio-sub">You'll pick up passengers from the office.</div>
+              </div>
             </label>
-
-            <label>
-                <input name="takeout" value="dinein" type="radio" required />
-                I want to eat at Big Daddy
+            <label class="radio-option" data-value="2">
+              <input type="radio" name="mode" value="2">
+              <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+              <div>
+                <div class="radio-text">I need to be driven</div>
+                <div class="radio-sub">Need a ride from the office.</div>
+              </div>
             </label>
-        </fieldset>
-
-        <!-- LIPÓTI BAKERY -->
-        <fieldset>
-
-        </fieldset>
-        <!-- Transportation -->
-
-        <div class="transportFieldsetElement field-hidden">
-            <fieldset>
-                <legend>Transportation:</legend>
-
-                <label>
-                    <input name="mode" value="1" type="radio" />
-                    I come to the office with car and I will drive.
-                </label>
-
-                <label>
-                    <input name="mode" value="2" type="radio" />
-                    I come to the office without car and want to be driven.
-                </label>
-
-                <label>
-                    <input name="mode" value="3" type="radio" />
-                    I will come by myself.
-                </label>
-            </fieldset>
-            <!-- LIPOTI USER DRIVER OPTION -->
-            <fieldset>
-                <div class="lipotiUserDriverElement field-hidden">
-                    <legend>LIPÓTI USER DRIVER OPTION:</legend>
-                    <label>
-                        <input name="lipoti_d" value="1" type="radio" required />
-                        Yes, I want to be a driver for LIPÓTI.
-                    </label>
-                    <label>
-                        <input name="lipoti_d" value="0" type="radio" required />
-                        NO, I do not want to be a driver for LIPÓTI.
-                    </label>
-                </div>
-            </fieldset>
-            <!-- LIPÓTI BAKERY -->
-            <fieldset>
-                <div class="lipotisetElement field-hidden">
-                    <legend>LIPÓTI BAKERY:</legend>
-                    <label>
-                        <input name="lipoti" value="1" type="radio" required />
-                        Yes, I want to go to LIPÓTI BAKERY.
-                    </label>
-                    <label>
-                        <input name="lipoti" value="0" type="radio" required />
-                        NO, I do not want to go to LIPÓTI BAKERY.
-                    </label>
-                </div>
-            </fieldset>
+            <label class="radio-option" data-value="3">
+              <input type="radio" name="mode" value="3">
+              <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+              <div>
+                <div class="radio-text">I'll go by myself</div>
+                <div class="radio-sub">You'll get there on your own.</div>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <button type="submit" {% if disabled %}disabled{% endif %}>Submit Order</button>
-    </form>
+        <div class="collapsible" id="lipoti-driver-section" style="padding-top:1rem">
+          <div class="field">
+            <label class="field-label">LIPÓTI Driver Option</label>
+            <div class="radio-group">
+              <label class="radio-option" data-value="1">
+                <input type="radio" name="lipoti_d" value="1">
+                <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+                <div><div class="radio-text">Yes, I'll be a LIPÓTI driver</div></div>
+              </label>
+              <label class="radio-option" data-value="0">
+                <input type="radio" name="lipoti_d" value="0">
+                <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+                <div><div class="radio-text">No, I don't want to drive for LIPÓTI</div></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="collapsible" id="lipoti-section" style="padding-top:1rem">
+          <div class="field">
+            <label class="field-label">LIPÓTI Bakery Stop</label>
+            <div class="radio-group">
+              <label class="radio-option" data-value="1">
+                <input type="radio" name="lipoti" value="1">
+                <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+                <div><div class="radio-text">Yes, stop at LIPÓTI Bakery</div></div>
+              </label>
+              <label class="radio-option" data-value="0">
+                <input type="radio" name="lipoti" value="0">
+                <div class="radio-dot"><div class="radio-dot-inner"></div></div>
+                <div><div class="radio-text">No thanks, skip LIPÓTI</div></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <button type="submit" class="btn-submit{% if late %} btn-late{% endif %}" {% if disabled %}disabled{% endif %} style="margin-top:1.25rem"
+    {% if late %}onclick="event.preventDefault(); document.getElementById('late-modal').classList.remove('hidden');"{% endif %}>
+    {% if disabled %}ORDERING CLOSED{% elif late %}⚠ SEND ORDER LATE{% else %}SUBMIT ORDER →{% endif %}
+  </button>
+</form>
+
+<!-- Late order warning modal -->
+<div class="modal-overlay hidden" id="late-modal" onclick="document.getElementById('late-modal').classList.add('hidden')">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:480px">
+    <div class="modal-head">
+      <span class="modal-head-title">⚠ LATE ORDER</span>
+      <button class="modal-close" onclick="document.getElementById('late-modal').classList.add('hidden')">✕</button>
+    </div>
+    <div style="padding:1.5rem;display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center">
+      <div class="late-warning-badge">⚠</div>
+      <div style="font-family:var(--hv);font-size:0.9rem;color:var(--amber);letter-spacing:0.06em">ORDERS ALREADY SENT</div>
+      <div style="font-size:0.88rem;color:var(--cream);line-height:1.5;max-width:360px">
+        Orders are usually already sent out to Big Daddy at this point. Do you still want to order? If so, please <strong style="color:var(--amber)">contact the team</strong> to confirm that they placed your order.
+      </div>
+      <button class="btn-submit btn-late" style="margin-top:0.5rem" onclick="document.getElementById('late-modal').classList.add('hidden'); document.getElementById('order-form').submit();">
+        SEND ANYWAY →
+      </button>
+    </div>
+  </div>
 </div>
 
 <script>
+// Character count
+var orderInput = document.getElementById('order');
+var charCount = document.getElementById('char-count');
+orderInput.addEventListener('input', function() { charCount.textContent = this.value.length; updatePreview(); });
 
-    document.addEventListener("change", function (event) {
-        const target = event.target;
+// Live preview
+var nameInput = document.getElementById('name');
+nameInput.addEventListener('input', updatePreview);
+function updatePreview() {
+  var n = nameInput.value.trim(), o = orderInput.value.trim();
+  var preview = document.getElementById('order-preview');
+  var empty = document.getElementById('preview-empty');
+  var pName = document.getElementById('preview-name');
+  var pOrder = document.getElementById('preview-order');
+  if (n || o) {
+    preview.classList.add('filled');
+    empty.style.display = 'none';
+    pName.style.display = n ? '' : 'none'; pName.textContent = n;
+    pOrder.style.display = o ? '' : 'none'; pOrder.textContent = o;
+  } else {
+    preview.classList.remove('filled');
+    empty.style.display = ''; pName.style.display = 'none'; pOrder.style.display = 'none';
+  }
+}
 
-        const transportFieldset = document.querySelector('.transportFieldsetElement');
-        const transportRadios = document.querySelectorAll('input[name="mode"]');
-        const lipotisetElement = document.querySelector('.lipotisetElement');
-        const lipotiRadios = document.querySelectorAll('input[name="lipoti"]');
-        // --- lipoti user driver logic ---
-        const lipotiUserDriverElement = document.querySelector('.lipotiUserDriverElement');
-        const lipotiUserDriverRadios = document.querySelectorAll('input[name="lipoti_d"]');
+// Radio styling
+document.querySelectorAll('.radio-option input[type="radio"]').forEach(function(r) {
+  r.addEventListener('change', function() {
+    this.closest('.radio-group').querySelectorAll('.radio-option').forEach(function(o) { o.classList.remove('selected'); });
+    this.closest('.radio-option').classList.add('selected');
+  });
+});
 
-        // --- takeout radio logic ---
-        if (target.name === "takeout") {
-            const isEatAtBigDaddy = target.value === "dinein" && target.checked;
+// Collapsible sections
+var takeoutRadios = document.querySelectorAll('input[name="takeout"]');
+var modeRadios = document.querySelectorAll('input[name="mode"]');
+var transportSection = document.getElementById('transport-section');
+var lipotiDriverSection = document.getElementById('lipoti-driver-section');
+var lipotiSection = document.getElementById('lipoti-section');
 
-            if (isEatAtBigDaddy) {
-                transportFieldset.classList.add("show");
-                transportRadios.forEach(r => r.required = true);
-            } else {
-                transportFieldset.classList.remove("show");
-                lipotiUserDriverElement.classList.remove("show");
-                lipotisetElement.classList.remove("show");
+takeoutRadios.forEach(function(r) {
+  r.addEventListener('change', function() {
+    var dinein = this.value === 'dinein';
+    transportSection.classList.toggle('open', dinein);
+    if (!dinein) {
+      lipotiDriverSection.classList.remove('open');
+      lipotiSection.classList.remove('open');
+      modeRadios.forEach(function(m) { m.checked = false; m.closest('.radio-option').classList.remove('selected'); });
+      document.querySelectorAll('input[name="lipoti_d"],input[name="lipoti"]').forEach(function(m) { m.checked = false; m.closest('.radio-option').classList.remove('selected'); });
+    }
+  });
+});
 
+modeRadios.forEach(function(r) {
+  r.addEventListener('change', function() {
+    lipotiDriverSection.classList.toggle('open', this.value === '1');
+    lipotiSection.classList.toggle('open', this.value === '2');
+    if (this.value !== '1') document.querySelectorAll('input[name="lipoti_d"]').forEach(function(m) { m.checked = false; m.closest('.radio-option').classList.remove('selected'); });
+    if (this.value !== '2') document.querySelectorAll('input[name="lipoti"]').forEach(function(m) { m.checked = false; m.closest('.radio-option').classList.remove('selected'); });
+  });
+});
 
-                transportRadios.forEach(r => {
-                    r.required = false;
-                    r.checked = false;
-                });
-                lipotiRadios.forEach(r => {
-                    r.required = false;
-                    r.checked = false;
-                });
-                lipotiUserDriverRadios.forEach(r => {
-                    r.required = false;
-                    r.checked = false;
-                });
-            }
-        }
-        // --- lipoti user driver logic ---
-        if (target.name === "mode") {
-            if (target.value === "1" && target.checked) {
-                lipotiUserDriverElement.classList.add("show");
-                lipotiUserDriverRadios.forEach(r => r.required = true);
-            } else {
-                lipotiUserDriverElement.classList.remove("show");
-                lipotiUserDriverRadios.forEach(r => {
-                    r.required = false;
-                    r.checked = false;
-                });
-            }
-        }
-        // --- transport mode radio logic ---
-        if (target.name === "mode") {
-            if (target.value === "2" && target.checked) {
-                lipotisetElement.classList.add("show");
-                lipotiRadios.forEach(r => r.required = true);
-            } else {
-                lipotisetElement.classList.remove("show");
-                lipotiRadios.forEach(r => {
-                    r.required = false;
-                    r.checked = false;
-                });
-            }
-        }
-    });
-
-
+// Countdown timer
+var CLOSE_HOUR = {{ close_hour }}, CLOSE_MIN = {{ close_min }};
+var isDisabled = {{ 'true' if disabled else 'false' }};
+var noTimeConstraint = {{ 'true' if no_time_constraint else 'false' }};
+function updateCountdown() {
+  if (noTimeConstraint || isDisabled) return;
+  var now = new Date();
+  var close = new Date(now); close.setHours(CLOSE_HOUR, CLOSE_MIN, 0, 0);
+  var diff = close - now;
+  var el = document.getElementById('countdown');
+  var label = document.getElementById('countdown-label');
+  if (diff <= 0) {
+    el.className = 'countdown closing'; label.textContent = 'ORDERS ALREADY SENT · LATE ORDER';
+  } else if (diff < 15 * 60000) {
+    var m = Math.floor(diff / 60000), s = Math.floor((diff % 60000) / 1000);
+    el.className = 'countdown closing'; label.textContent = 'CLOSES IN ' + m + 'm ' + s + 's';
+  } else {
+    el.className = 'countdown open'; label.textContent = 'OPEN UNTIL ' + CLOSE_HOUR + ':' + String(CLOSE_MIN).padStart(2, '0');
+  }
+}
+if (!noTimeConstraint) setInterval(updateCountdown, 1000);
 </script>
-
 {% endblock %}

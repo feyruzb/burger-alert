@@ -1,118 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="manifest" href="/static/site.webmanifest">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css')}}?v={{app_version}}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.colors.min.css">
-    {%block head %} {% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+  <link rel="manifest" href="/static/site.webmanifest">
+  <link rel="stylesheet" href="{{ url_for('static',filename='css/main.css')}}?v={{app_version}}">
+  {% block head %}{% endblock %}
 </head>
-
 <body>
-    <span id="version" class="pico-color-red-450">{{app_version}}</span>
-    <header>
-        <nav>
-            <a href="/" class="pico-color-red-450">Home</a>
-            <a href="/today_orders" class="pico-color-red-450">Today's orders</a>
-            <a href="/car_distribution" class="pico-color-red-450">Car Distribution</a>
-            <a href="#" id="menu-trigger" class="pico-color-red-450">Menu</a>
-        </nav>
-    </header>
-    <dialog id="menu-dialog">
-        <article>
-            <header>
-                <span></span>
-                <p>
-                    <strong>Menu</strong>
-                </p>
-                <button aria-label="Close" rel="prev" id="menu-close"></button>
-            </header>
-            <div class="flex-col-center">
-                <img src="/static/images/big-daddy-menu-1.q85.jpg" alt="Big Daddy menu image 1" class="img-open-onclick">
-                <img src="/static/images/big-daddy-menu-2.q85.jpg" alt="Big Daddy menu image 2" class="img-open-onclick">
-            </div>
-        </article>
-    </dialog>
-    <script>
-        const menuDialogEl = document.querySelector("#menu-dialog");
-        const menuTriggerEl = document.querySelector("#menu-trigger");
-        const menuCloseEl = document.querySelector("#menu-close");
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <div style="display:flex;align-items:baseline;gap:0.4rem">
+      <span class="header-brand">BURGER<span>ALERT</span></span>
+      <span class="header-version">{{app_version}}</span>
+    </div>
+    <nav class="nav desktop-nav">
+      <a href="/" class="nav-btn {% if active_page == 'order' %}active{% endif %}">Order</a>
+      <a href="/today_orders" class="nav-btn {% if active_page == 'orders' %}active{% endif %}" style="padding-right:1.5rem">
+        Today's Orders
+        {% if order_count %}<span class="nav-badge">{{ order_count }}</span>{% endif %}
+      </a>
+      <a href="/car_distribution" class="nav-btn {% if active_page == 'cars' %}active{% endif %}">Car Distribution</a>
+      <button class="nav-btn nav-menu-btn" onclick="openMenuModal()" aria-label="Open menu">Menu</button>
+      <button class="daynight-btn" onclick="toggleTheme()" id="theme-toggle-desktop" aria-label="Toggle theme"></button>
+    </nav>
+    <button class="daynight-btn" onclick="toggleTheme()" id="theme-toggle-mobile" style="display:none;font-size:0.75rem" aria-label="Toggle theme"></button>
+  </header>
 
-        function closeMenu() {
-            document.body.classList.add("modal-is-closing");
-            setTimeout(() => {
-                document.body.classList.remove("modal-is-closing");
-                document.body.classList.remove("modal-is-open");
-                menuDialogEl.close();
-            }, 200);
-        }
+  <!-- Main content -->
+  <main class="main">
+    <div class="container">
+      {% block body %}{% endblock %}
+    </div>
+  </main>
 
-        function openMenu() {
-            document.body.classList.add("modal-is-open");
-            document.body.classList.add("modal-is-opening");
-            setTimeout(() => {
-                document.body.classList.remove("modal-is-opening");
-            }, 200);
-            menuDialogEl.showModal();
-        }
+  <!-- Footer (desktop) -->
+  <footer class="footer desktop-footer">
+    <a href="https://github.com/feyruzb/burger-alert" target="_blank">Burger Alert repo</a>
+  </footer>
 
-        menuTriggerEl.addEventListener("click", function () {
-            if (menuDialogEl.open) {
-                closeMenu();
-            } else {
-                openMenu();
-            }
-        });
+  <!-- Mobile bottom tab bar -->
+  <div class="bottom-tab-bar">
+    <div class="bottom-tabs">
+      <a href="/" class="tab-item {% if active_page == 'order' %}active{% endif %}">
+        <span class="tab-icon">🧾</span>ORDER
+      </a>
+      <a href="/today_orders" class="tab-item {% if active_page == 'orders' %}active{% endif %}" style="position:relative">
+        <span class="tab-icon">🍔</span>ORDERS
+        {% if order_count %}<span class="tab-badge">{{ order_count }}</span>{% endif %}
+      </a>
+      <a href="/car_distribution" class="tab-item {% if active_page == 'cars' %}active{% endif %}">
+        <span class="tab-icon">🚗</span>CARS
+      </a>
+      <button class="tab-menu-btn" onclick="openMenuModal()" aria-label="Open menu">
+        <span class="tab-icon">📋</span>MENU
+      </button>
+    </div>
+  </div>
 
-        menuCloseEl.addEventListener("click", function () {
-            if (!menuDialogEl.open ||
-                document.body.classList.contains("modal-is-opening") ||
-                document.body.classList.contains("modal-is-closing")) return;
+  <!-- Menu modal -->
+  <div class="modal-overlay hidden" id="menu-modal" onclick="closeMenuModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-head-title">BIG DADDY MENU</span>
+        <button class="modal-close" onclick="closeMenuModal()" aria-label="Close menu">✕</button>
+      </div>
+      <div class="modal-body">
+        <img src="/static/images/big-daddy-menu-2.q85.jpg" class="menu-img" alt="Big Daddy menu page 1" onclick="window.open(this.src)">
+        <img src="/static/images/big-daddy-menu-1.q85.jpg" class="menu-img" alt="Big Daddy menu page 2" onclick="window.open(this.src)">
+      </div>
+    </div>
+  </div>
+</div>
 
-            closeMenu();
-        });
+<script>
+// Theme
+function getDefaultTheme() {
+  var stored = localStorage.getItem('ba_theme');
+  if (stored === 'charcoal' || stored === 'parchment') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'charcoal' : 'parchment';
+}
+function applyTheme(t) {
+  document.documentElement.className = t === 'parchment' ? 'theme-parchment' : '';
+  localStorage.setItem('ba_theme', t);
+  var label = t === 'charcoal' ? '☀️ DAY' : '🌙 NIGHT';
+  var short = t === 'charcoal' ? '☀️' : '🌙';
+  document.getElementById('theme-toggle-desktop').textContent = label;
+  document.getElementById('theme-toggle-mobile').textContent = short;
+}
+function toggleTheme() {
+  var current = localStorage.getItem('ba_theme') || getDefaultTheme();
+  applyTheme(current === 'charcoal' ? 'parchment' : 'charcoal');
+}
+applyTheme(getDefaultTheme());
 
-        document.addEventListener("click", function (event) {
-            if (!menuDialogEl.open ||
-                document.body.classList.contains("modal-is-opening") ||
-                document.body.classList.contains("modal-is-closing")) return;
+// Responsive: show mobile theme button
+function checkMobile() {
+  var m = window.innerWidth <= 640;
+  document.getElementById('theme-toggle-mobile').style.display = m ? '' : 'none';
+}
+checkMobile();
+window.addEventListener('resize', checkMobile);
 
-            if (!menuDialogEl.querySelector("article").contains(event.target)) {
-                closeMenu();
-            }
-        });
-
-        document.addEventListener("keydown", function (event) {
-            if (!menuDialogEl.open ||
-                document.body.classList.contains("modal-is-opening") ||
-                document.body.classList.contains("modal-is-closing")) return;
-
-            if (event.key === "Escape") {
-                closeMenu();
-            }
-        });
-
-        document.querySelectorAll(".img-open-onclick").forEach(function (el) {
-            el.addEventListener("click", function (el) {
-                window.open(el.target.src);
-            });
-        });
-    </script>
-    <main class="container">
-        {%block body %} {% endblock %}
-    </main>
-    <footer>
-        <div>
-            <a class="pico-color-yellow-300" target="_blank" href="https://github.com/feyruzb/burger-alert">Burger Alert repo</a>
-        </div>
-    </footer>
+// Menu modal
+function openMenuModal() { document.getElementById('menu-modal').classList.remove('hidden'); }
+function closeMenuModal() { document.getElementById('menu-modal').classList.add('hidden'); }
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeMenuModal(); });
+</script>
 </body>
-
 </html>

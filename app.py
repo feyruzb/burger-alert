@@ -1,6 +1,6 @@
 from datetime import datetime, date, time
 from os import getenv
-from flask import Flask, redirect, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from pathlib import Path
 from typing import Dict, List
@@ -19,15 +19,49 @@ db = SQLAlchemy(app)
 
 # GLOBAL VARIABLES
 MAX_PASSENGER_CNT = 4
-START_HOUR_OF_DAY = 1
-END_HOUR_OF_DAY = 13
 NO_TIME_CONSTRAINT = getenv("NO_TIME_CONSTRAINT") in ["true", "1"]
-# despite the name there is supposed to be only 1 driver
 APP_VERSION = getenv("APP_VERSION", "v0.0.0")
 
+CLOSE_HOUR = 11
+CLOSE_MIN = 5
+
+def get_order_count():
+    """Total orders placed today."""
+    start_of_today = datetime.combine(date.today(), time.min)
+    end_of_today = datetime.combine(date.today(), time.max)
+    return Orders.query.filter(
+        Orders.date_created >= start_of_today,
+        Orders.date_created <= end_of_today
+    ).count()
+
+def get_countdown_info():
+    """Return countdown state and label for templates."""
+    if NO_TIME_CONSTRAINT:
+        return "open", "OPEN · NO TIME LIMIT"
+    now = datetime.now()
+    close = now.replace(hour=CLOSE_HOUR, minute=CLOSE_MIN, second=0, microsecond=0)
+    diff = (close - now).total_seconds()
+    if diff <= 0:
+        return "closing", "ORDERS ALREADY SENT · LATE ORDER"
+    if diff < 15 * 60:
+        m = int(diff // 60)
+        s = int(diff % 60)
+        return "closing", f"CLOSES IN {m}m {s}s"
+    return "open", f"OPEN UNTIL {CLOSE_HOUR}:{CLOSE_MIN:02d}"
+    if diff < 15 * 60:
+        m = int(diff // 60)
+        s = int(diff % 60)
+        return "closing", f"CLOSES IN {m}m {s}s"
+    return "open", f"OPEN UNTIL {CLOSE_HOUR}:{CLOSE_MIN:02d}"
+
 @app.context_processor
-def inject_version():
-    return dict(app_version=APP_VERSION)
+def inject_globals():
+    count = 0
+    try:
+        count = get_order_count()
+    except Exception:
+        pass
+    return dict(app_version=APP_VERSION, order_count=count)
 
 class UserOrder:
     def __init__(self, name,
@@ -89,16 +123,25 @@ def get_list_of_lipoti_drivers():
     return [name[0] for name in names_wc]
 
 def is_now_burger_time():
-    if app.debug or NO_TIME_CONSTRAINT:
-        return True
-    return datetime.now().hour > START_HOUR_OF_DAY and \
-        datetime.now().hour < END_HOUR_OF_DAY and \
-        datetime.now().weekday() == 3
+    return True
+
+def is_late_order():
+    """True when past the close time (11:05)."""
+    if NO_TIME_CONSTRAINT or app.debug:
+        return False
+    now = datetime.now()
+    close = now.replace(hour=CLOSE_HOUR, minute=CLOSE_MIN, second=0, microsecond=0)
+    return now >= close
 
 @app.route("/")
 def index_page():
-    disabled = not is_now_burger_time()
-    return render_template('index.html', disabled=disabled)
+    late = is_late_order()
+    state, label = get_countdown_info()
+    return render_template('index.html', disabled=False, late=late,
+                           active_page='order',
+                           countdown_state=state, countdown_label=label,
+                           close_hour=CLOSE_HOUR, close_min=CLOSE_MIN,
+                           no_time_constraint=NO_TIME_CONSTRAINT)
 
 @app.route("/submit", methods=["POST"])
 def submit():
@@ -116,10 +159,6 @@ def submit():
         takeout = 0
         t_mode = request.form.get("mode", 0)
 
-    if not is_now_burger_time():
-        return render_template("failed.html",
-                               error_msg = "not burger ordering time")
-
     order = Orders(name=name,
                    order=order,
                    lipoti_d=lipoti_d,
@@ -130,27 +169,72 @@ def submit():
     try:
         db.session.add(order)
         db.session.commit()
-        return render_template("confirmation.html", name=name, order=order)
+        return render_template("confirmation.html", name=name, order=order, active_page='order')
     except:
-        return render_template("failed.html")
+        return render_template("failed.html", active_page='order')
 
 @app.route("/orders/delete", methods=["POST"])
 def delete_order():
     name = request.form.get("name")
-    if not name:
-        return render_template("failed.html",
-                               error_msg="No such name exists in database")
+    is_ajax = request.headers.get("X-Requested-With") == "fetch"
 
+    if not name:
+        if is_ajax:
+            return {"ok": False}, 400
+        return render_template("failed.html",
+                               error_msg="No such name exists in database",
+                               active_page='orders')
 
     try:
         db.session.query(Orders).filter(
             Orders.name == name
             ).delete()
-
         db.session.commit()
-    except:
-        return render_template("failed.html")
+    except Exception:
+        if is_ajax:
+            return {"ok": False}, 500
+        return render_template("failed.html", active_page='orders')
 
+    if is_ajax:
+        return {"ok": True}
+    return redirect("/today_orders")
+
+
+@app.route("/orders/edit", methods=["POST"])
+def edit_order():
+    name = request.form.get("name")
+    new_order = request.form.get("order", "")[:200]
+    is_ajax = request.headers.get("X-Requested-With") == "fetch"
+
+    if not name or not new_order:
+        if is_ajax:
+            return {"ok": False}, 400
+        return render_template("failed.html", active_page='orders')
+
+    try:
+        start_of_today = datetime.combine(date.today(), time.min)
+        end_of_today = datetime.combine(date.today(), time.max)
+        orders = Orders.query.filter(
+            Orders.name == name,
+            Orders.date_created >= start_of_today,
+            Orders.date_created <= end_of_today
+        ).all()
+        if not orders:
+            if is_ajax:
+                return {"ok": False}, 404
+            return render_template("failed.html", active_page='orders')
+        # Update first order, delete the rest (squash into one)
+        orders[0].order = new_order
+        for extra in orders[1:]:
+            db.session.delete(extra)
+        db.session.commit()
+    except Exception:
+        if is_ajax:
+            return {"ok": False}, 500
+        return render_template("failed.html", active_page='orders')
+
+    if is_ajax:
+        return {"ok": True}
     return redirect("/today_orders")
 
 
@@ -199,7 +283,8 @@ def return_todays_orders():
 
     return render_template("today_orders.html",
                            dinein_orders=buckets[0],
-                           takeout_orders=buckets[1] )
+                           takeout_orders=buckets[1],
+                           active_page='orders')
 
 @app.route("/car_distribution")
 def return_car_distribution():
@@ -283,11 +368,17 @@ def return_car_distribution():
         return render_template("car_distribution.html",
                             list_of_distributes=list_of_distributes,
                             list_of_extra=list_of_extra,
-                            names_self_passengers=names_self_passengers)
+                            names_self_passengers=names_self_passengers,
+                            lipoti_drivers=lipoti_drivers,
+                            max_passenger_cnt=MAX_PASSENGER_CNT,
+                            active_page='cars')
     return render_template("car_distribution.html",
                             list_of_distributes=[],
                             list_of_extra=[],
-                            names_self_passengers=[])
+                            names_self_passengers=[],
+                            lipoti_drivers=[],
+                            max_passenger_cnt=MAX_PASSENGER_CNT,
+                            active_page='cars')
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0",

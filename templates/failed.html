@@ -1,13 +1,16 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 
-{%block head %}
-<title>Failed page</title>
+{% block head %}
+<title>Burger Alert - Error</title>
 {% endblock %}
 
-{%block body %}
-
-<div class ="content">
-    <h2>❌❌ Something went wrong, error: {{error_msg}}❌❌</h2>
+{% block body %}
+<div class="confirm-card">
+  <div class="confirm-icon-wrap" style="background:oklch(63% 0.20 38 / 0.15)">
+    <span class="confirm-icon">✕</span>
+  </div>
+  <div class="confirm-title" style="color:var(--red)">SOMETHING WENT WRONG</div>
+  <div class="confirm-sub">{{ error_msg or 'An unexpected error occurred.' }}</div>
+  <a href="/" class="btn-secondary">Go back</a>
 </div>
-
 {% endblock %}

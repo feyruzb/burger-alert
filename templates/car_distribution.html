@@ -1,76 +1,90 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 
-{%block head %}
-<title>Distributing people in cars page</title>
+{% block head %}
+<title>Burger Alert - Car Distribution</title>
 {% endblock %}
 
-{%block body %}
+{% block body %}
+<h1 class="page-title">CAR DISTRIBUTION</h1>
+<p class="page-subtitle">WHO'S DRIVING WHO</p>
 
-<div class="content" style="width: 100%; display: flex; flex-direction: column; align-items: center; gap: 50px;">
-    <div style="width: 90%; display: flex; flex-direction: column; align-items: center; gap: 40px;">
-        <h2>Car Distribution</h2>
-        <div style="display: flex; flex-wrap: wrap; gap: 30px;">
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                {% for car, passengers in list_of_distributes %}
-                <div class="card"
-                    style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
-                    <h3>Car: <span class="pico-color-red-450">{{ car }}</span></h3>
-                    <ul>
-                        {% for person in passengers %}
-                        <li><span class="pico-color-red-450">{{ person }}</span></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% else %}
-                <p>
-                    There are currently no drivers.
-                </p>
-                {% endfor %}
-            </div>
-        </div>
+<div style="display:flex;flex-direction:column;gap:2rem">
+  <!-- Cars -->
+  <div>
+    <div class="orders-section-head" style="margin-bottom:1rem">
+      <span class="orders-section-title">🚗 CAR DISTRIBUTION</span>
+      <span class="orders-count">{{ list_of_distributes|length }} cars</span>
     </div>
-    <div style="width: 90%; display: flex; flex-direction: column; align-items: center; gap: 40px;">
-        <!-- people that didn't get a car -->
-        <div>
-            <h2>
-                People that didn't get a car (sent order too late)
-            </h2>
+    {% if list_of_distributes %}
+    <div class="cars-grid">
+      {% for driver, passengers in list_of_distributes %}
+      <div class="car-card{% if driver in lipoti_drivers %} car-card-lipoti{% endif %}">
+        <div class="car-card-head">
+          <span>🚗</span>
+          <span class="car-driver">{{ driver }}</span>
+          {% if driver in lipoti_drivers %}<span class="car-lipoti-tag">LIPÓTI</span>{% endif %}
+          <span class="car-capacity-text">{{ passengers|length }}/{{ max_passenger_cnt }}</span>
         </div>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            {% for passenger in list_of_extra %}
-            <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
-                <ul>
-                    <li><span class="pico-color-red-450">{{ passenger }}</span></li>
-                </ul>
-            </div>
+        <div class="car-passengers">
+          {% for p in passengers %}
+          <div class="car-passenger">{{ p }}</div>
+          {% else %}
+          <span class="car-empty">No passengers yet</span>
+          {% endfor %}
+        </div>
+        <!-- Seat grid -->
+        <div class="seat-grid">
+          <div class="seat {% if driver in lipoti_drivers %}driver-lipoti{% else %}driver{% endif %}" title="Driver: {{ driver }}">{{ driver[0] }}</div>
+          {% for i in range(max_passenger_cnt) %}
+            {% if i < passengers|length %}
+              <div class="seat filled" title="{{ passengers[i] }}">{{ passengers[i][0] }}</div>
             {% else %}
-            <p>
-                There are no poeople that did not get a car.
-            </p>
-            {% endfor %}
+              <div class="seat empty" title="Empty seat">·</div>
+            {% endif %}
+          {% endfor %}
         </div>
-        <!-- People that go themselves -->
-        <div>
-            <h2>
-                People that are going themselves.
-            </h2>
-        </div>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-            {% for passenger in names_self_passengers %}
-            <div class="card" style="padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; min-width: 200px;">
-                <ul>
-                    <li><span class="pico-color-red-450">{{ passenger }}</span></li>
-                </ul>
-            </div>
-            {% else %}
-            <p>
-                There are no poeople that are going themselves.
-            </p>
-            {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">NO DRIVERS YET</div>
+    {% endif %}
+  </div>
 
-        </div>
+  <!-- Didn't get a car -->
+  {% if list_of_extra %}
+  <div>
+    <div class="orders-section-head" style="margin-bottom:1rem">
+      <span class="orders-section-title" style="color:var(--red)">⚠ DIDN'T GET A CAR</span>
+      <span class="orders-count">{{ list_of_extra|length }}</span>
     </div>
+    <div class="cars-grid">
+      {% for name in list_of_extra %}
+      <div class="car-card">
+        <div class="car-card-head"><span class="car-driver" style="color:var(--red)">{{ name }}</span></div>
+        <div class="car-passengers"><span class="car-empty">Ordered too late</span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Going themselves -->
+  {% if names_self_passengers %}
+  <div>
+    <div class="orders-section-head" style="margin-bottom:1rem">
+      <span class="orders-section-title" style="color:var(--muted)">🚶 GOING THEMSELVES</span>
+      <span class="orders-count">{{ names_self_passengers|length }}</span>
+    </div>
+    <div class="cars-grid">
+      {% for name in names_self_passengers %}
+      <div class="car-card">
+        <div class="car-card-head"><span class="car-driver" style="color:var(--muted)">{{ name }}</span></div>
+        <div class="car-passengers"><span class="car-empty">Independent</span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 </div>
-
-
 {% endblock %}

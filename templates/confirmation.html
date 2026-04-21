@@ -1,13 +1,21 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 
-{%block head %}
-<title>Success page</title>
+{% block head %}
+<title>Burger Alert - Confirmation</title>
 {% endblock %}
 
-{%block body %}
-
-<div class ="content">
-    <h2>✅ Dear {{ name }}, your order for <em>{{order.order}}</em> has been placed ✅</h2>
+{% block body %}
+<div class="confirm-card">
+  <div class="confirm-icon-wrap">
+    <span class="confirm-icon">✓</span>
+  </div>
+  <div class="confirm-title">ORDER RECEIVED</div>
+  <div class="confirm-ticket">
+    <div class="confirm-row"><span class="confirm-key">Name</span><span class="confirm-val">{{ name }}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Order</span><span class="confirm-val">{{ order.order }}</span></div>
+    <div class="confirm-row"><span class="confirm-key">Type</span><span class="confirm-val">{% if order.takeout %}Takeout{% else %}Dine-in{% endif %}</span></div>
+  </div>
+  <div class="confirm-sub">Your order has been logged. See you at Big Daddy!</div>
+  <a href="/" class="btn-secondary">Place another order</a>
 </div>
-
 {% endblock %}

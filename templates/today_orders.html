@@ -1,76 +1,322 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 
-{%block head %}
-<title>Orders page</title>
+{% block head %}
+<title>Burger Alert - Today's Orders</title>
 {% endblock %}
 
-{%block body %}
+{% block body %}
+<h1 class="page-title">TODAY'S ORDERS</h1>
+<p class="page-subtitle">LIVE ORDER LIST · RESETS AT MIDNIGHT</p>
 
-<div class="content">
-    <h2>Dine-in Orders</h2>
-    <ol style="word-break: break-all;">
-        {% for user_obj in dinein_orders %}
-        <li>
-            <span class="pico-color-red-450">{{ user_obj.name }}</span>
-            ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
-            <form action="/orders/delete" method="post" class="delete_button_wrapper" onsubmit="return confirm('Are you sure?');">
-                <input type="hidden" name="name" value="{{ user_obj.name }}">
-                <button type="submit" class="delete_button">
-                    <span style="display: none;">Delete</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-trash2-icon lucide-trash-2">
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                </button>
-            </form>
-        </li>
-        {% else %}
-            <p>
-                There are no dine-in orders.
-            </p>
-        {% endfor %}
-    </ol>
-    <h2>Takeout Orders</h2>
-    <ol style="word-break: break-all;">
-        {% for user_obj in takeout_orders %}
-        <li {% if user_obj.takeout %}style="font-style: italic;" {% endif %}>
-            <span class="pico-color-red-450">{{ user_obj.name }}</span>
+<div class="phone-panel">
+  <div class="phone-panel-head">
+    <span class="phone-panel-title">📞 CALL-IN LIST</span>
+    <span class="orders-count" id="orders-total">{{ dinein_orders|length + takeout_orders|length }} orders</span>
+    <button class="copy-btn" onclick="copyOrders()" id="copy-btn" title="Copy to clipboard" aria-label="Copy orders to clipboard">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      </svg>
+      <span id="copy-label">COPY</span>
+    </button>
+    <button class="copy-btn" onclick="refreshOrders()" id="refresh-btn" title="Refresh orders" aria-label="Refresh orders">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+        <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+      </svg>
+      <span id="refresh-label">REFRESH</span>
+    </button>
+  </div>
 
-            ordered: <span class="pico-color-red-450">{{ user_obj.order }}</span>
-            {% if user_obj.takeout %}
-                Preference: <span class="pico-color-red-450">Takeout</span>
-            {% else %}
-                Preference: <span class="pico-color-red-450">Dine-in</span>
-                → Assigned: <span class="pico-color-red-450">Takeout (no space)</span>
-            {% endif %}
+  <div id="orders-content">
+    {% if dinein_orders %}
+    <div class="phone-section-label">🍔 DINE-IN</div>
+    <div class="phone-list">
+      {% for uo in dinein_orders %}
+      <div class="phone-row{% if loop.index is odd %} phone-row-alt{% endif %}" data-name="{{ uo.name }}">
+        <span class="phone-num">{{ loop.index }}.</span>
+        <span class="phone-name">{{ uo.name }}</span>
+        <span class="phone-sep">→</span>
+        <span class="phone-order">{{ uo.order }}</span>
+        <div class="phone-row-actions">
+          <button type="button" class="edit-btn" onclick="openEditModal('{{ uo.name }}', this)" aria-label="Edit order for {{ uo.name }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button type="button" class="delete-btn" onclick="openDeleteModal('{{ uo.name }}')" aria-label="Delete order for {{ uo.name }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
 
-            <form action="/orders/delete" method="post" class="delete_button_wrapper" onsubmit="return confirm('Are you sure?');">
-                <input type="hidden" name="name" value="{{ user_obj.name }}">
-                <button type="submit" class="delete_button">
-                    <span style="display: none;">Delete</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-trash2-icon lucide-trash-2">
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                </button>
-            </form>
-        </li>
-        {% else %}
-            <p>
-                There are no takeout orders.
-            </p>
-        {% endfor %}
-    </ol>
+    {% if takeout_orders %}
+    <div class="phone-section-label">📦 TAKEOUT</div>
+    <div class="phone-list">
+      {% for uo in takeout_orders %}
+      <div class="phone-row{% if loop.index is odd %} phone-row-alt{% endif %}" data-name="{{ uo.name }}">
+        <span class="phone-num">{{ loop.index }}.</span>
+        <span class="phone-name">{{ uo.name }}</span>
+        <span class="phone-sep">→</span>
+        <span class="phone-order">{{ uo.order }}</span>
+        <div class="phone-row-actions">
+          <button type="button" class="edit-btn" onclick="openEditModal('{{ uo.name }}', this)" aria-label="Edit order for {{ uo.name }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
+          <button type="button" class="delete-btn" onclick="openDeleteModal('{{ uo.name }}')" aria-label="Delete order for {{ uo.name }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not dinein_orders and not takeout_orders %}
+    <div class="empty-state" style="margin:1rem" id="empty-state">NO ORDERS YET</div>
+    {% endif %}
+  </div>
 </div>
 
+<!-- Delete confirmation modal -->
+<div class="modal-overlay hidden" id="delete-modal" onclick="closeDeleteModal()" role="dialog" aria-label="Delete order confirmation">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:400px">
+    <div class="modal-head">
+      <span class="modal-head-title">🗑 DELETE ORDER</span>
+      <button class="modal-close" onclick="closeDeleteModal()" aria-label="Close">✕</button>
+    </div>
+    <div id="delete-modal-body" style="padding:1.5rem;display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center">
+      <div class="delete-icon-badge">🗑</div>
+      <div style="font-size:0.88rem;color:var(--cream);line-height:1.5">
+        Remove <strong id="delete-name-label" style="color:var(--red)"></strong>'s order?
+      </div>
+      <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
+        <button class="btn-cancel" onclick="closeDeleteModal()">CANCEL</button>
+        <button class="btn-delete-confirm" id="delete-confirm-btn">DELETE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit order modal -->
+<div class="modal-overlay hidden" id="edit-modal" onclick="closeEditModal()" role="dialog" aria-label="Edit order">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:440px">
+    <div class="modal-head">
+      <span class="modal-head-title">✏️ EDIT ORDER</span>
+      <button class="modal-close" onclick="closeEditModal()" aria-label="Close">✕</button>
+    </div>
+    <div id="edit-modal-body" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
+      <div class="field">
+        <label class="field-label">Editing order for</label>
+        <div id="edit-name-display" style="font-weight:700;color:var(--red);font-size:0.95rem"></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="edit-order-input">Order Description</label>
+        <input class="field-input" type="text" id="edit-order-input" maxlength="200" placeholder="Updated order...">
+        <span class="char-count"><span id="edit-char-count">0</span> / 200</span>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:0.5rem">
+        <button class="btn-cancel" onclick="closeEditModal()">CANCEL</button>
+        <button class="btn-submit" id="edit-save-btn" style="width:auto;padding:0.55rem 1.5rem;font-size:0.7rem;margin:0">SAVE</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var deleteName = '';
+var editName = '';
+
+/* ── DELETE ── */
+function openDeleteModal(name) {
+  deleteName = name;
+  document.getElementById('delete-name-label').textContent = name;
+  var body = document.getElementById('delete-modal-body');
+  body.querySelector('.delete-icon-badge').textContent = '🗑';
+  body.querySelector('.delete-icon-badge').className = 'delete-icon-badge';
+  body.querySelectorAll('div')[1].innerHTML = 'Remove <strong style="color:var(--red)">' + name + '</strong>\'s order?';
+  body.querySelector('div:last-child').style.display = '';
+  document.getElementById('delete-confirm-btn').disabled = false;
+  document.getElementById('delete-confirm-btn').textContent = 'DELETE';
+  document.getElementById('delete-confirm-btn').classList.remove('btn-delete-shaking');
+  body.classList.remove('delete-modal-success');
+  document.getElementById('delete-modal').classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+  document.getElementById('delete-modal').classList.add('hidden');
+}
+
+document.getElementById('delete-confirm-btn').addEventListener('click', function() {
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = 'DELETING…';
+  btn.classList.add('btn-delete-shaking');
+
+  var body = new FormData();
+  body.append('name', deleteName);
+  fetch('/orders/delete', {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'fetch' },
+    body: body
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    btn.classList.remove('btn-delete-shaking');
+    if (data.ok) {
+      var mb = document.getElementById('delete-modal-body');
+      mb.classList.add('delete-modal-success');
+      mb.querySelector('.delete-icon-badge').textContent = '✓';
+      mb.querySelector('.delete-icon-badge').className = 'delete-icon-badge delete-success-badge';
+      mb.querySelectorAll('div')[1].innerHTML = '<strong style="color:var(--green)">' + deleteName + '</strong>\'s order deleted';
+      mb.querySelector('div:last-child').style.display = 'none';
+      document.querySelectorAll('.phone-row[data-name="' + deleteName + '"]').forEach(function(row) {
+        row.classList.add('phone-row-removing');
+        row.addEventListener('animationend', function() { row.remove(); checkEmpty(); });
+      });
+      setTimeout(closeDeleteModal, 1100);
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'DELETE';
+    }
+  }).catch(function() {
+    btn.classList.remove('btn-delete-shaking');
+    btn.disabled = false;
+    btn.textContent = 'DELETE';
+  });
+});
+
+/* ── EDIT ── */
+function openEditModal(name, btn) {
+  editName = name;
+  document.getElementById('edit-name-display').textContent = name;
+  var row = btn.closest('.phone-row');
+  var currentOrder = row.querySelector('.phone-order').textContent;
+  var input = document.getElementById('edit-order-input');
+  input.value = currentOrder;
+  document.getElementById('edit-char-count').textContent = currentOrder.length;
+  document.getElementById('edit-save-btn').disabled = false;
+  document.getElementById('edit-save-btn').textContent = 'SAVE';
+  document.getElementById('edit-modal').classList.remove('hidden');
+  input.focus();
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.add('hidden');
+}
+
+document.getElementById('edit-order-input').addEventListener('input', function() {
+  document.getElementById('edit-char-count').textContent = this.value.length;
+});
+
+document.getElementById('edit-save-btn').addEventListener('click', function() {
+  var btn = this;
+  var newOrder = document.getElementById('edit-order-input').value.trim();
+  if (!newOrder) return;
+  btn.disabled = true;
+  btn.textContent = 'SAVING…';
+
+  var body = new FormData();
+  body.append('name', editName);
+  body.append('order', newOrder);
+  fetch('/orders/edit', {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'fetch' },
+    body: body
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.ok) {
+      document.querySelectorAll('.phone-row[data-name="' + editName + '"]').forEach(function(row) {
+        row.querySelector('.phone-order').textContent = newOrder;
+        row.classList.add('phone-row-updated');
+        setTimeout(function() { row.classList.remove('phone-row-updated'); }, 600);
+      });
+      closeEditModal();
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'SAVE';
+    }
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'SAVE';
+  });
+});
+
+/* ── EMPTY STATE ── */
+function checkEmpty() {
+  var rows = document.querySelectorAll('.phone-row:not(.phone-row-removing)');
+  if (rows.length === 0) {
+    var content = document.getElementById('orders-content');
+    content.innerHTML = '<div class="empty-state" style="margin:1rem;animation:fadeUp 0.3s ease">NO ORDERS YET</div>';
+  }
+}
+
+/* ── REFRESH ── */
+function refreshOrders() {
+  var btn = document.getElementById('refresh-btn');
+  var label = document.getElementById('refresh-label');
+  btn.classList.add('refresh-spinning');
+  label.textContent = '…';
+  fetch('/today_orders', { headers: { 'X-Requested-With': 'fetch' } })
+    .then(function(r) { return r.text(); })
+    .then(function(html) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(html, 'text/html');
+      var newContent = doc.getElementById('orders-content');
+      if (newContent) {
+        document.getElementById('orders-content').innerHTML = newContent.innerHTML;
+      }
+      var newTotal = doc.getElementById('orders-total');
+      if (newTotal) {
+        document.getElementById('orders-total').textContent = newTotal.textContent;
+      }
+      label.textContent = 'DONE!';
+      setTimeout(function() { label.textContent = 'REFRESH'; }, 1000);
+    })
+    .catch(function() {
+      label.textContent = 'FAILED';
+      setTimeout(function() { label.textContent = 'REFRESH'; }, 1500);
+    })
+    .finally(function() {
+      btn.classList.remove('refresh-spinning');
+    });
+}
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeDeleteModal(); closeEditModal(); }
+});
+
+/* ── COPY ── */
+function copyOrders() {
+  var lines = [];
+  document.querySelectorAll('.phone-panel .phone-section-label').forEach(function(sec) {
+    lines.push(sec.textContent.trim());
+    var list = sec.nextElementSibling;
+    if (list) list.querySelectorAll('.phone-row:not(.phone-row-removing)').forEach(function(row) {
+      var num = row.querySelector('.phone-num').textContent;
+      var name = row.querySelector('.phone-name').textContent;
+      var order = row.querySelector('.phone-order').textContent;
+      lines.push(num + ' ' + name + ' → ' + order);
+    });
+    lines.push('');
+  });
+  navigator.clipboard.writeText(lines.join('\n').trim()).then(function() {
+    var label = document.getElementById('copy-label');
+    label.textContent = 'COPIED!';
+    setTimeout(function() { label.textContent = 'COPY'; }, 1500);
+  });
+}
+</script>
 {% endblock %}
