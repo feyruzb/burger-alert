@@ -155,7 +155,7 @@
       <div style="font-size:0.88rem;color:var(--cream);line-height:1.5;max-width:360px">
         Orders are usually already sent out to Big Daddy at this point. Do you still want to order? If so, please <strong style="color:var(--amber)">contact the team</strong> to confirm that they placed your order.
       </div>
-      <button class="btn-submit btn-late" style="margin-top:0.5rem" onclick="document.getElementById('late-modal').classList.add('hidden'); document.getElementById('order-form').submit();">
+      <button class="btn-submit btn-late" style="margin-top:0.5rem" onclick="document.getElementById('late-modal').classList.add('hidden'); var err = validateOrderTree(); if (err) { showFormError(err); } else { document.getElementById('order-form').submit(); }">
         SEND ANYWAY →
       </button>
     </div>
@@ -224,6 +224,46 @@ modeRadios.forEach(function(r) {
     if (this.value !== '2') document.querySelectorAll('input[name="lipoti"]').forEach(function(m) { m.checked = false; m.closest('.radio-option').classList.remove('selected'); });
   });
 });
+
+// Form validation — ensure user completes their decision tree
+function validateOrderTree() {
+  var takeout = document.querySelector('input[name="takeout"]:checked');
+  if (!takeout) return 'Please select Dine-in or Takeout.';
+  if (takeout.value === 'dinein') {
+    var mode = document.querySelector('input[name="mode"]:checked');
+    if (!mode) return 'Please select a transportation option.';
+    if (mode.value === '1') {
+      if (!document.querySelector('input[name="lipoti_d"]:checked'))
+        return 'Please select the LIPÓTI driver option.';
+    }
+    if (mode.value === '2') {
+      if (!document.querySelector('input[name="lipoti"]:checked'))
+        return 'Please select the LIPÓTI bakery option.';
+    }
+  }
+  return null;
+}
+
+document.getElementById('order-form').addEventListener('submit', function(e) {
+  var err = validateOrderTree();
+  if (err) {
+    e.preventDefault();
+    showFormError(err);
+  }
+});
+
+function showFormError(msg) {
+  var existing = document.getElementById('form-error-toast');
+  if (existing) existing.remove();
+  var toast = document.createElement('div');
+  toast.id = 'form-error-toast';
+  toast.className = 'form-error-toast';
+  toast.innerHTML = '<span>⚠ ' + msg + '</span><button onclick="this.parentElement.remove()" aria-label="Dismiss">✕</button>';
+  document.getElementById('order-form').prepend(toast);
+  toast.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  setTimeout(function() { if (toast.parentElement) toast.classList.add('form-error-toast-fade'); }, 4000);
+  setTimeout(function() { if (toast.parentElement) toast.remove(); }, 4500);
+}
 
 // Countdown timer
 var CLOSE_HOUR = {{ close_hour }}, CLOSE_MIN = {{ close_min }};

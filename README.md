@@ -1,6 +1,6 @@
 # 🍔 Burger Alert
 
-A weekly burger ordering app for coordinating Thursday lunch orders from [Big Daddy Burger Bar](https://www.facebook.com/BigDaddyBurgerBar). Built with Flask, SQLite, and a custom dark/light UI.
+A burger ordering app for coordinating lunch orders from [Big Daddy Burger Bar](https://www.facebook.com/BigDaddyBurgerBar). Built with Flask, SQLite, and a custom dark/light UI.
 
 ## Features
 
@@ -40,7 +40,7 @@ flask --app app run --debug
 | Variable | Description |
 |---|---|
 | `APP_VERSION` | Version string shown in the header |
-| `NO_TIME_CONSTRAINT` | Set to `true` or `1` to allow ordering outside Thursday 1:00–13:00 |
+| `NO_TIME_CONSTRAINT` | Set to `true` or `1` to allow ordering outside 00:01–11:05 |
 
 ## Project Structure
 
@@ -66,8 +66,8 @@ flask --app app run --debug
 
 ## Ordering Rules
 
-- Ordering opens on **Thursdays** between configured hours (default 1:00–13:00)
-- Closes at **11:05** (countdown shown on order page)
+- Ordering opens **daily** at **00:01** and closes at **11:05**
+- Late orders (after 11:05) show a warning but can still be submitted
 - Dine-in capacity is limited by available drivers × 5 seats
 - Overflow dine-in orders get bumped to takeout
 - LIPÓTI Bakery passengers get priority seating with LIPÓTI drivers

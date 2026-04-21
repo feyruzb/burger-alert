@@ -99,6 +99,22 @@ html, body { height: 100%; background: var(--bg); color: var(--cream); font-fami
   font-family: var(--hv); font-size: 0.7rem; color: var(--amber); letter-spacing: 0.06em;
 }
 
+/* FORM ERROR TOAST */
+.form-error-toast {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+  background: oklch(63% 0.20 38 / 0.12); border: 1px solid var(--red); border-radius: 8px;
+  padding: 0.7rem 1rem; margin-bottom: 1rem;
+  font-family: var(--hv); font-size: 0.72rem; color: var(--red); letter-spacing: 0.04em;
+  animation: slideUp 0.25s ease;
+}
+.form-error-toast button {
+  background: none; border: none; color: var(--red); cursor: pointer;
+  font-size: 0.9rem; padding: 0 0.25rem; opacity: 0.6; transition: opacity 0.15s;
+}
+.form-error-toast button:hover { opacity: 1; }
+.form-error-toast-fade { animation: fadeOut 0.5s ease forwards; }
+@keyframes fadeOut { to { opacity: 0; transform: translateY(-8px); } }
+
 /* TICKET */
 .ticket { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .ticket-header {

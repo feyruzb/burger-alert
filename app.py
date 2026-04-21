@@ -24,6 +24,8 @@ APP_VERSION = getenv("APP_VERSION", "v0.0.0")
 
 CLOSE_HOUR = 11
 CLOSE_MIN = 5
+OPEN_HOUR = 0
+OPEN_MIN = 1
 
 def get_order_count():
     """Total orders placed today."""
@@ -39,15 +41,13 @@ def get_countdown_info():
     if NO_TIME_CONSTRAINT:
         return "open", "OPEN · NO TIME LIMIT"
     now = datetime.now()
+    open_t = now.replace(hour=OPEN_HOUR, minute=OPEN_MIN, second=0, microsecond=0)
     close = now.replace(hour=CLOSE_HOUR, minute=CLOSE_MIN, second=0, microsecond=0)
-    diff = (close - now).total_seconds()
-    if diff <= 0:
+    if now < open_t:
+        return "closed", "OPENS AT 00:01"
+    if now >= close:
         return "closing", "ORDERS ALREADY SENT · LATE ORDER"
-    if diff < 15 * 60:
-        m = int(diff // 60)
-        s = int(diff % 60)
-        return "closing", f"CLOSES IN {m}m {s}s"
-    return "open", f"OPEN UNTIL {CLOSE_HOUR}:{CLOSE_MIN:02d}"
+    diff = (close - now).total_seconds()
     if diff < 15 * 60:
         m = int(diff // 60)
         s = int(diff % 60)
@@ -123,7 +123,13 @@ def get_list_of_lipoti_drivers():
     return [name[0] for name in names_wc]
 
 def is_now_burger_time():
-    return True
+    """True when ordering is open (00:01–11:05)."""
+    if NO_TIME_CONSTRAINT or app.debug:
+        return True
+    now = datetime.now()
+    open_t = now.replace(hour=OPEN_HOUR, minute=OPEN_MIN, second=0, microsecond=0)
+    close = now.replace(hour=CLOSE_HOUR, minute=CLOSE_MIN, second=0, microsecond=0)
+    return open_t <= now < close
 
 def is_late_order():
     """True when past the close time (11:05)."""
@@ -135,9 +141,10 @@ def is_late_order():
 
 @app.route("/")
 def index_page():
+    open_now = is_now_burger_time()
     late = is_late_order()
     state, label = get_countdown_info()
-    return render_template('index.html', disabled=False, late=late,
+    return render_template('index.html', disabled=not open_now and not late, late=late,
                            active_page='order',
                            countdown_state=state, countdown_label=label,
                            close_hour=CLOSE_HOUR, close_min=CLOSE_MIN,
