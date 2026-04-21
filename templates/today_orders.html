@@ -101,10 +101,10 @@
     </div>
     <div id="delete-modal-body" style="padding:1.5rem;display:flex;flex-direction:column;align-items:center;gap:1rem;text-align:center">
       <div class="delete-icon-badge">🗑</div>
-      <div style="font-size:0.88rem;color:var(--cream);line-height:1.5">
+      <div style="font-size:0.88rem;color:var(--cream);line-height:1.5" id="delete-msg">
         Remove <strong id="delete-name-label" style="color:var(--red)"></strong>'s order?
       </div>
-      <div style="display:flex;gap:0.75rem;margin-top:0.5rem">
+      <div style="display:flex;gap:0.75rem;margin-top:0.5rem" id="delete-btns">
         <button class="btn-cancel" onclick="closeDeleteModal()">CANCEL</button>
         <button class="btn-delete-confirm" id="delete-confirm-btn">DELETE</button>
       </div>
@@ -144,12 +144,11 @@ var editName = '';
 /* ── DELETE ── */
 function openDeleteModal(name) {
   deleteName = name;
-  document.getElementById('delete-name-label').textContent = name;
   var body = document.getElementById('delete-modal-body');
   body.querySelector('.delete-icon-badge').textContent = '🗑';
   body.querySelector('.delete-icon-badge').className = 'delete-icon-badge';
-  body.querySelectorAll('div')[1].innerHTML = 'Remove <strong style="color:var(--red)">' + name + '</strong>\'s order?';
-  body.querySelector('div:last-child').style.display = '';
+  document.getElementById('delete-msg').innerHTML = 'Remove <strong style="color:var(--red)">' + name + '</strong>\'s order?';
+  document.getElementById('delete-btns').style.display = '';
   document.getElementById('delete-confirm-btn').disabled = false;
   document.getElementById('delete-confirm-btn').textContent = 'DELETE';
   document.getElementById('delete-confirm-btn').classList.remove('btn-delete-shaking');
@@ -180,8 +179,8 @@ document.getElementById('delete-confirm-btn').addEventListener('click', function
       mb.classList.add('delete-modal-success');
       mb.querySelector('.delete-icon-badge').textContent = '✓';
       mb.querySelector('.delete-icon-badge').className = 'delete-icon-badge delete-success-badge';
-      mb.querySelectorAll('div')[1].innerHTML = '<strong style="color:var(--green)">' + deleteName + '</strong>\'s order deleted';
-      mb.querySelector('div:last-child').style.display = 'none';
+      document.getElementById('delete-msg').innerHTML = '<strong style="color:var(--green)">' + deleteName + '</strong>\'s order deleted';
+      document.getElementById('delete-btns').style.display = 'none';
       document.querySelectorAll('.phone-row[data-name="' + deleteName + '"]').forEach(function(row) {
         row.classList.add('phone-row-removing');
         row.addEventListener('animationend', function() { row.remove(); checkEmpty(); });
