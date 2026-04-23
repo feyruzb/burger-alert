@@ -158,6 +158,10 @@ def submit():
     lipoti = request.form.get("lipoti", "Placeholder")
     takeout = request.form.get("takeout", "Placeholder")
 
+    if len(name) == 0 or len(order) == 0:
+        return render_template("failed.html", active_page='order')
+
+
     # if it is a takeout order, set mode to 0 if not set to mode
     if takeout == "takeout":
         takeout = 1
