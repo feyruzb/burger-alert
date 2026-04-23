@@ -227,6 +227,8 @@ modeRadios.forEach(function(r) {
 
 // Form validation — ensure user completes their decision tree
 function validateOrderTree() {
+  if (!nameInput.value.trim()) return 'Please enter your name.';
+  if (!orderInput.value.trim()) return 'Please enter your order.';
   var takeout = document.querySelector('input[name="takeout"]:checked');
   if (!takeout) return 'Please select Dine-in or Takeout.';
   if (takeout.value === 'dinein') {

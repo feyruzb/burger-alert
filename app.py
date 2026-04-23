@@ -153,10 +153,15 @@ def index_page():
 @app.route("/submit", methods=["POST"])
 def submit():
     name = request.form.get("name", "Placeholder")
+    print(name, type(name))
     order = request.form.get("order", "Placeholder")[:200]
     lipoti_d = request.form.get("lipoti_d", 0)
     lipoti = request.form.get("lipoti", "Placeholder")
     takeout = request.form.get("takeout", "Placeholder")
+
+    if len(name) == 0 or len(order) == 0:
+        return render_template("failed.html", active_page='order')
+
 
     # if it is a takeout order, set mode to 0 if not set to mode
     if takeout == "takeout":
